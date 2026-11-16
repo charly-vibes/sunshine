@@ -1,0 +1,261 @@
+# tdd-ro5u — sunshine's per-ticket implementation pipeline
+#
+# TDD red -> green -> refactor, then Universal Rule of 5 review, gated by this
+# repo's hard gates (spk lint, ah check ratchet, pretender) and closed at a
+# human ship checkpoint. One run per beads ticket.
+#
+# Usage:
+#   wai pipeline start tdd-ro5u --topic "sun-XXXX <ticket title>"
+#
+# The pipeline never pushes: repo profile is conservative for git handoff.
+
+[pipeline]
+name = "tdd-ro5u"
+description = "Per-ticket TDD + Universal Rule of 5 review, gated by sunshine's spec-corpus gates and a human ship checkpoint"
+
+[pipeline.metadata]
+when = "Implementing one sunshine beads ticket end-to-end (spec-first corpus change and/or Rust code) with review and gates"
+skills = ["tdd", "rule-of-5-universal", "commit"]
+
+[[steps]]
+id = "orient"
+prompt = """
+{topic}: Orient before changing anything.
+
+Run:
+- `wai prime`
+- `wai status`
+- `bd show <ticket-id>` (the ticket named in the topic)
+- `bd ready`
+- `wai search "<ticket title>"`
+
+Select exactly this ticket. If it is ambiguous, blocked, or its lane is
+`design`/`hitl`, stop and ask. Otherwise claim it: `bd update <ticket-id> --claim`.
+
+Read the ticket's files[] and base_commit. Confirm HEAD is at or after
+base_commit; if HEAD advanced, investigate drift with a specific question
+before editing. Read the owning spec and the property/constraint rows the
+ticket names.
+
+Do not edit code yet.
+Record: `wai add research "ORIENT: ticket=... lane=... base=... files=... constraints=..."`
+Advance: `wai pipeline next`
+"""
+
+[steps.gate.structural]
+min_artifacts = 1
+types = ["research"]
+
+[[steps]]
+id = "plan"
+prompt = """
+{topic}: Produce a minimal TDD plan.
+
+Include:
+- desired behavior, in terms of the property/constraint rows the ticket names
+- out of scope (state the ticket's non-goals)
+- test cases to write first (scenario ids + contract TOML paths under
+  `.espectacular/<capability>/`)
+- the narrow test command
+- the full verification command (`just test && just gates`)
+- spec files and source files likely touched
+- mirror updates required (`spk compile specs`, `tools/deploy_specs.py`)
+
+Do not edit code or specs yet.
+Record: `wai add plan "PLAN: ..."`
+Advance: `wai pipeline next`
+"""
+
+[steps.gate.structural]
+min_artifacts = 1
+types = ["plan"]
+
+[[steps]]
+id = "red"
+prompt = """
+{topic}: Write the failing test/contract first.
+
+Rules:
+- Spec-first tickets: add the property/constraint rows and the deriving
+  property row FIRST. `spk lint specs` must fail for the expected reason
+  (`no_orphan_property`, unresolved guard, or missing deriving property).
+- Code tickets: declare the contract TOML in `.espectacular/<capability>/`
+  and write the test that fails for the missing behavior, not for setup
+  breakage.
+- New scenarios that have no implementation yet go into
+  `tools/gates/ah-undeclared.txt` with their owning ticket as the comment.
+- Run the narrow test command (or `spk lint specs`) and capture the exact
+  failure. Do not proceed if it fails for an unrelated reason.
+
+Record: `wai add research "RED: command=... expected failure=... actual=..."`
+Advance: `wai pipeline next`
+"""
+
+[steps.gate.structural]
+min_artifacts = 1
+types = ["research"]
+
+[[steps]]
+id = "green"
+prompt = """
+{topic}: Implement the minimum change that turns red green.
+
+Rules:
+- Smallest correct change. No behavior expansion beyond the ticket.
+- Corpus changes: edit `specs/` (source), then `spk compile specs` and
+  `tools/deploy_specs.py`; mirrors must be staged with the corpus change.
+- Code changes: no lenient-parse escape hatches, no silent repair, no
+  serde defaults that fake absent fields (ticket anti-goals are binding).
+- New source files carry Purpose/Responsibilities/Rationale headers.
+- Run `just test` (narrow feedback), then `just gates` (must pass).
+
+Record: `wai add design "GREEN: changed=... verified=... remaining findings=..."`
+Advance: `wai pipeline next`
+"""
+
+[steps.gate.structural]
+min_artifacts = 1
+types = ["design"]
+
+[[steps.gate.oracles]]
+name = "tests-pass"
+description = "Green artifact records the commands run and their result"
+timeout = 60
+
+[[steps.gate.oracles]]
+name = "repo-gates"
+description = "just gates must pass (spk lint + ah check ratchet + pretender)"
+scope = "all"
+timeout = 600
+
+[[steps]]
+id = "refactor"
+prompt = """
+{topic}: Refactor while the tests stay green.
+
+Allowed: simplify names, remove duplication, clarify structure, improve
+boundaries, tighten docs.
+Forbidden: behavior expansion, unrelated cleanup, architectural rewrites.
+
+Run `just test && just gates` after refactoring.
+Record: `wai add design "REFACTOR: ... verified command=..."`
+Advance: `wai pipeline next`
+"""
+
+[steps.gate.structural]
+min_artifacts = 1
+types = ["design"]
+
+[[steps.gate.oracles]]
+name = "repo-gates"
+description = "just gates must still pass after refactor"
+scope = "all"
+timeout = 600
+
+[[steps]]
+id = "ro5u-review"
+prompt = """
+{topic}: Review the diff with `rule-of-5-universal`.
+
+Review only. Do not fix yet.
+Review against: the ticket's stated behavior and non-goals, the spec rows it
+touches, fleet boundaries (geometry->sunset, claims->bajan, artifacts are
+views), and the repo's hard gates.
+
+Return findings grouped by Critical / High / Medium / Low. Each finding
+includes file/location, evidence, and a concrete fix.
+Record: `wai add review "RO5U: ..."`
+Advance: `wai pipeline next`
+"""
+
+[steps.gate.procedural]
+require_review = true
+max_critical = 0
+
+[[steps]]
+id = "fix-review"
+prompt = """
+{topic}: Fix review findings.
+
+Rules:
+- Critical and High must be fixed.
+- Medium fixed unless explicitly deferred with a reason recorded on the ticket.
+- Low fixed if cheap, otherwise filed as a beads issue.
+- Add tests for behavior-impacting fixes.
+- Run `just test && just gates`.
+- If a fix changes a scenario's declared state, update
+  `tools/gates/ah-undeclared.txt` in the same change.
+
+Record: `wai add research "RO5U-FIXES: ... verified command=..."`
+Advance: `wai pipeline next`
+"""
+
+[steps.gate.structural]
+min_artifacts = 1
+
+[[steps.gate.oracles]]
+name = "tests-pass"
+description = "Fix artifact records the verification commands and their result"
+timeout = 60
+
+[[steps.gate.oracles]]
+name = "repo-gates"
+description = "just gates must pass after review fixes"
+scope = "all"
+timeout = 600
+
+[[steps]]
+id = "quality-ledger"
+prompt = """
+{topic}: Produce the ticket's quality ledger.
+
+Record exactly:
+Changed:
+- files and purpose
+Verified:
+- commands run and result (`just test`, `just gates`, narrow command)
+Review:
+- RO5U status and remaining findings (with issue ids if deferred)
+Risks:
+- known remaining risks or "none known"
+Next:
+- exact next action (remaining ticket work or ship)
+
+Record: `wai add research "QUALITY LEDGER: ..."`
+Advance: `wai pipeline next`
+"""
+
+[steps.gate.structural]
+min_artifacts = 1
+types = ["research"]
+
+[[steps]]
+id = "ship-close"
+prompt = """
+{topic}: Ship the completed ticket.
+
+Do:
+- inspect `git diff` and `git status`
+- update the ticket notes with the ledger summary, then `bd close <ticket-id>`
+- export the issue tracker (`bd export`) and stage `.beads/issues.jsonl` with the change
+- commit atomically (Conventional Commit; scope names the area)
+- run `wai close`
+
+Do not push: repo profile is conservative; report the proposed push.
+Record: `wai add research "SHIP: commit=... ticket=... validation=..."`
+Then run `wai pipeline approve` after reviewing the ship evidence.
+"""
+
+[steps.gate.structural]
+min_artifacts = 1
+types = ["research"]
+
+[[steps.gate.oracles]]
+name = "repo-gates"
+description = "final gate before close"
+scope = "all"
+timeout = 600
+
+[steps.gate.approval]
+required = true
+message = "Human checkpoint before ship-close — review ship evidence, then run 'wai pipeline approve'"

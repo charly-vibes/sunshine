@@ -1,3 +1,87 @@
+<!-- BEADS:START -->
+<!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
+## Beads Issue Tracker
+
+This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
+
+### Quick Reference
+
+```bash
+bd ready              # Find available work
+bd show <id>          # View issue details
+bd update <id> --claim  # Claim work
+bd close <id>         # Complete work
+```
+
+### Rules
+
+- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
+- Run `bd prime` for detailed command reference and session close protocol
+- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+
+## Session Completion
+
+**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
+
+**MANDATORY WORKFLOW:**
+
+1. **File issues for remaining work** - Create issues for anything that needs follow-up
+2. **Run quality gates** (if code changed) - Tests, linters, builds
+3. **Update issue status** - Close finished work, update in-progress items
+4. **PUSH TO REMOTE** - This is MANDATORY.
+5. **Clean up** - Clear stashes, prune remote branches
+6. **Verify** - All changes committed AND pushed
+7. **Hand off** - Provide context for next session
+<!-- END BEADS INTEGRATION -->
+<!-- BEADS:END -->
+
+## Implementation workflow (tdd-ro5u)
+
+Every ticket runs through the repo-local wai pipeline, one run per ticket:
+
+```bash
+bd show <id>                              # read lane, files, base_commit
+bd update <id> --claim                    # claim before editing
+wai pipeline start tdd-ro5u --topic "sun-XXXX <ticket title>"
+```
+
+Steps: orient → plan → red → green → refactor → ro5u-review → fix-review →
+quality-ledger → ship-close. Each step records a wai artifact (`wai add
+research|plan|design|review`); green, fix-review, and ship-close run
+`just gates`; ship-close requires `wai pipeline approve` after the evidence is
+reviewed.
+
+- Design-lane tickets (`lane: design`) stop at orient for the user's decision.
+- Spec-first: edit `specs/`, run `spk compile specs` and
+  `tools/deploy_specs.py`, and stage the mirrors with the corpus change.
+- Declare each new contract TOML with the test that exercises it. A scenario
+  whose implementation is still open is recorded in
+  `tools/gates/ah-undeclared.txt` with its owning ticket in the same change.
+- Close with `bd close <id>`, `bd export`, and stage `.beads/issues.jsonl`
+  with `git add -f` (the directory is globally gitignored).
+
+## Gates
+
+- `just gates` = `spk lint specs` + `tools/gates/ah_check_ratchet.py --run-tests`.
+  The ratchet tolerates only the undeclared scenarios listed in
+  `tools/gates/ah-undeclared.txt`; any other finding, a new undeclared
+  scenario, or a stale baseline line fails.
+- `just ci` = build + `cargo test` + gates. Never bypass a red gate: fix the
+  cause, or record the corpus decision on the ticket.
+
+## Commits
+
+Deliberate, atomic commits, one logical change each:
+
+1. Review `git status` and every affected diff before staging.
+2. Present the file list and proposed message to the user; wait for approval.
+3. Stage explicit paths only (`git add path`); never `git add .` or `git add -A`.
+4. Scoped subject (`area: summary`, as used in this repo); the body explains
+   why. No co-author or AI attribution.
+5. Verify with `git log -n 1 --stat`.
+6. Commit locally. Push only with explicit authorization — the wai policy
+   requires approval for push/deploy/release.
+
 <!-- SPECODELIC:START -->
 ## Specodelic — spec format rules (managed block)
 

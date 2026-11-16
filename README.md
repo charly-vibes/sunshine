@@ -66,10 +66,24 @@ implementation:
 | `audit.contract` | the round-trip guarantee, named drift, read-only |
 
 ```bash
-just gates         # spk lint specs + ah check
+just gates         # spk lint specs + ah check with declared-backlog ratchet (runs contract tests)
 just spec-compile  # regenerate specodelic mirrors after editing specs
 just test          # testaruda exec loop (TDD entry)
 just ci            # build + test-full + gates
+```
+
+The corpus is spec-first: scenarios land before their contract TOMLs.
+`just gates` allows exactly the undeclared scenarios listed in
+`tools/gates/ah-undeclared.txt` (each line names its owning beads ticket);
+any other ah finding fails, a new undeclared scenario fails until it is
+declared with its ticket, and a stale baseline line fails. The list only
+shrinks.
+
+Tickets run through the `tdd-ro5u` wai pipeline (TDD red→green→refactor,
+Universal Rule of 5 review, repo gates, human ship checkpoint):
+
+```bash
+wai pipeline start tdd-ro5u --topic "sun-XXXX <ticket title>"
 ```
 
 ## Part of the charly-vibes fleet
