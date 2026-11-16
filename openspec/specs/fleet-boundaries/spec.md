@@ -21,6 +21,18 @@ store runs through bajan's human-adoption review, never through this
 tool. This spec is the root of the corpus; every other spec here
 consumes its separation rules.
 
+The value proposition is the fleet's claim-to-document pipeline: a
+bajan export of claims with verbatim evidence renders here into a tagged
+document that audits back with a byte-identical report, so a downstream
+machine pipeline — the primary consumer, per the audit-first ordering —
+can trust the document without opening the claim store, with the human
+reader as the secondary consumer. In the concrete success scenario, one
+manifest goes in, one artifact in a requested format comes out, and
+every artifact audits clean and reproduces byte-for-byte. The seam
+versions this rests on are tracked in the README's compatibility table;
+neither is pinned yet — the manifest schema is unpublished (sun-mqs)
+and the descriptor contract is sunset-owned.
+
 ## Purpose
 
 sunshine is the fleet's render layer: it compiles claim anchor manifests
@@ -36,6 +48,17 @@ Rendered artifacts are views — the only mutation path back to the claim
 store runs through bajan's human-adoption review, never through this
 tool. This spec is the root of the corpus; every other spec here
 consumes its separation rules.
+The value proposition is the fleet's claim-to-document pipeline: a
+bajan export of claims with verbatim evidence renders here into a tagged
+document that audits back with a byte-identical report, so a downstream
+machine pipeline — the primary consumer, per the audit-first ordering —
+can trust the document without opening the claim store, with the human
+reader as the secondary consumer. In the concrete success scenario, one
+manifest goes in, one artifact in a requested format comes out, and
+every artifact audits clean and reproduces byte-for-byte. The seam
+versions this rests on are tracked in the README's compatibility table;
+neither is pinned yet — the manifest schema is unpublished (sun-mqs)
+and the descriptor contract is sunset-owned.
 
 ## Constraints
 

@@ -1,0 +1,11 @@
+id = "p-geometry-owner"
+description = "geometry ownership: the dependency graph links no PDF text-extraction or OCR engine and the render input surface is exactly --manifest/--dsc/--format/--out with no positional or nested subcommand (fleet.boundaries p_geometry_owner)"
+archetype = "NR"
+status = "active"
+superseded_by = ""
+authored_with = "0.12.2"
+
+[tests]
+cargo = [
+    { flags = "p_geometry_owner", timeout_seconds = 60 },
+]

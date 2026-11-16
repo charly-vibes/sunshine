@@ -55,6 +55,7 @@ visible downstream, never quietly kept.
 | am_strict_parse | invariant | unknown fields, duplicate claim keys, or references to absent episodes refuse parsing with machine-readable reasons; no field is silently ignored | [[anchor.manifest]] |
 | am_relations | advisory | inter-claim relations (supports, contradicts) ride an optional relations section referencing claim keys; relation types come from the closed vocabulary published with the schema | [[anchor.manifest]] |
 | am_schema_published | extension_point | the manifest JSON Schema is published for the producer (bajan export) and the consumer (sunshine) to conform to | [[anchor.manifest]] |
+| am_claim_key_canon | invariant | a claim_key is a nonempty, non-whitespace-only string; claim-key equality is decided on the NFC form, so two keys differing only by Unicode normalization form denote the same claim and a second occurrence refuses as a duplicate under am_strict_parse; duplicate detection and claim-key ordering both use the normalized key; NFC applies to claim-key equality only — stored claim text and episode text are never normalized by this rule | [[anchor.manifest]] |
 
 ## Model
 
@@ -86,6 +87,7 @@ visible downstream, never quietly kept.
 | p_strict_parse | unit | [[anchor.manifest.am_strict_parse]] | manifests with unknown fields, duplicate keys, and absent-episode references | each case refuses with a machine-readable reason naming the offending field or key |
 | p_relations | unit | [[anchor.manifest.am_relations]] | manifests with relation sections using published and unpublished relation types | published types parse; an unpublished type refuses; a missing relations section is valid |
 | p_schema_published | unit | [[anchor.manifest.am_schema_published]] | record instances sampled from the published schema | the schema document validates every accepted record and rejects every refused one |
+| p_claim_key_canon | unit | [[anchor.manifest.am_claim_key_canon]] | claim-key pairs differing only by NFC vs NFD form, key sets mixing NFC and NFD forms of distinct keys whose raw and normalized orderings differ, plus empty and whitespace-only keys | normalization-variant duplicate keys refuse with am_strict_parse's duplicate reason; empty or whitespace-only keys refuse; claim-key ordering is decided on the normalized form |
 
 ## Requirements
 
@@ -153,4 +155,10 @@ Every property row SHALL be verified by exactly one dedicated scenario;
 - **WHEN** record instances sampled from the published schema
 - **THEN** the schema document validates every accepted record and rejects every refused one
 - **VERIFIES** [[anchor.manifest.p_schema_published]]
+
+#### Scenario: p_claim_key_canon
+
+- **WHEN** claim-key pairs differing only by NFC vs NFD form, key sets mixing NFC and NFD forms of distinct keys whose raw and normalized orderings differ, plus empty and whitespace-only keys
+- **THEN** normalization-variant duplicate keys refuse with am_strict_parse's duplicate reason; empty or whitespace-only keys refuse; claim-key ordering is decided on the normalized form
+- **VERIFIES** [[anchor.manifest.p_claim_key_canon]]
 

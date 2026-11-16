@@ -56,6 +56,9 @@ positioning from its grammar so the audit parser stays small.
 | bk_audit_pairing | invariant | each backend ships with a parser implementing the audit contract for its profile; a backend without a passing round-trip gate does not ship | [[render.backends]] |
 | bk_degrade | advisory | emitted md, org, and html remain legible to tools ignorant of the profile; anchors, drawers, and comments read as plain text | [[render.backends]] |
 | bk_new_backend | extension_point | a new format enters by publishing a profile, an emitter, and an audit parser, amending the render contract's closed format set in the same change | [[render.backends]] |
+| rb_ship_bar | invariant | a backend counts as shipped only when four criteria hold together — totality over the anchor manifest strict parser's domain (every manifest am_strict_parse accepts renders with its full claim set and no claim dropped; input outside that domain refuses by name at render time with a machine-readable reason, never a silent subset), round-trip green (audit(render(m)) == m over the generated suite), the backend's render command answers the render contract's suite envelope (rc_envelope) on both success and refusal with exit status mirroring ok, and byte-reproducible output for identical inputs; absence of any one means the backend is unshipped | [[render.backends]] |
+| rb_deterministic_pdf | invariant | every timestamp, document ID, and other nondeterministic embedded value in pdf output is derived from the manifest digest; no wall-clock or random source may reach artifact bytes, so a pdf backend that cannot pin them does not ship | [[render.backends]] |
+| rb_audit_priority | invariant | no backend profile choice may break the audit round-trip; a render/audit conflict is always a backend defect, never an audit relaxation | [[render.backends]] |
 
 ## Model
 
@@ -86,6 +89,9 @@ positioning from its grammar so the audit parser stays small.
 | p_audit_pairing | unit | [[render.backends.bk_audit_pairing]] | the backend roster and its shipped parsers | each shipped backend has an audit parser passing its round-trip gate; an unpaired backend cannot ship |
 | p_degrade | unit | [[render.backends.bk_degrade]] | emitted md, org, html stripped of profile syntax | the remaining plain text preserves narrative and claim prose legibly |
 | p_new_backend | unit | [[render.backends.bk_new_backend]] | a candidate backend with profile, emitter, and parser | admission requires the published triple and the amended closed set in one change |
+| p_ship_bar | unit | [[render.backends.rb_ship_bar]] | the backend roster evaluated against the four ship criteria | a backend counts as shipped only when totality over the anchor manifest strict parser's domain (every manifest am_strict_parse accepts renders with its full claim set and no claim dropped; input outside that domain refuses by name at render time with a machine-readable reason, never a silent subset), round-trip green (audit(render(m)) == m over the generated suite), the backend's render command answers the render contract's suite envelope (rc_envelope) on both success and refusal with exit status mirroring ok, and byte-reproducible output for identical inputs all hold together; absence of any one leaves it unshipped |
+| p_deterministic_pdf | unit | [[render.backends.rb_deterministic_pdf]] | pdf renders of identical manifests across wall-clock hour and host differences | every timestamp, document ID, and other nondeterministic embedded value is derived from the manifest digest; no wall-clock or random source reaches artifact bytes, so artifact bytes are identical across runs and a pdf backend that cannot pin them does not ship |
+| p_audit_priority | law | [[render.backends.rb_audit_priority]] | backend render-and-audit pairs over artifacts mutated per the law's case classes — identity, presentation-only (whitespace, NFC form, comment marker spelling, reflow, attribute order), content-bearing (claim field and evidence edits), and composed presentation edits in both orders — per backend profile | **identity:** an unmodified render audits clean for every backend **presentation-mutation:** edits confined to the published canonicalizer's presentation-only classes — whitespace, NFC form, comment marker spelling, reflow, attribute order — canonicalize clean and never drift **content-mutation:** any content-bearing edit drifts with a named class — a render/audit conflict is always a backend defect, never an audit relaxation, so no profile choice breaks the round-trip **associativity:** canonicalizing composed presentation edits in either order yields the same clean form — canonicalize(w∘t∘r(m)) = canonicalize(r∘t∘w(m)) = canonicalize(m), where w, t, and r are whitespace, NFC, and comment-format edits — so the order of presentation mutations never changes the audit verdict |
 
 ## Requirements
 
@@ -147,4 +153,22 @@ Every property row SHALL be verified by exactly one dedicated scenario;
 - **WHEN** a candidate backend with profile, emitter, and parser
 - **THEN** admission requires the published triple and the amended closed set in one change
 - **VERIFIES** [[render.backends.p_new_backend]]
+
+#### Scenario: p_ship_bar
+
+- **WHEN** the backend roster evaluated against the four ship criteria
+- **THEN** a backend counts as shipped only when totality over the anchor manifest strict parser's domain (every manifest am_strict_parse accepts renders with its full claim set and no claim dropped; input outside that domain refuses by name at render time with a machine-readable reason, never a silent subset), round-trip green (audit(render(m)) == m over the generated suite), the backend's render command answers the render contract's suite envelope (rc_envelope) on both success and refusal with exit status mirroring ok, and byte-reproducible output for identical inputs all hold together; absence of any one leaves it unshipped
+- **VERIFIES** [[render.backends.p_ship_bar]]
+
+#### Scenario: p_deterministic_pdf
+
+- **WHEN** pdf renders of identical manifests across wall-clock hour and host differences
+- **THEN** every timestamp, document ID, and other nondeterministic embedded value is derived from the manifest digest; no wall-clock or random source reaches artifact bytes, so artifact bytes are identical across runs and a pdf backend that cannot pin them does not ship
+- **VERIFIES** [[render.backends.p_deterministic_pdf]]
+
+#### Scenario: p_audit_priority
+
+- **WHEN** backend render-and-audit pairs over artifacts mutated per the law's case classes — identity, presentation-only (whitespace, NFC form, comment marker spelling, reflow, attribute order), content-bearing (claim field and evidence edits), and composed presentation edits in both orders — per backend profile
+- **THEN** **identity:** an unmodified render audits clean for every backend **presentation-mutation:** edits confined to the published canonicalizer's presentation-only classes — whitespace, NFC form, comment marker spelling, reflow, attribute order — canonicalize clean and never drift **content-mutation:** any content-bearing edit drifts with a named class — a render/audit conflict is always a backend defect, never an audit relaxation, so no profile choice breaks the round-trip **associativity:** canonicalizing composed presentation edits in either order yields the same clean form — canonicalize(w∘t∘r(m)) = canonicalize(r∘t∘w(m)) = canonicalize(m), where w, t, and r are whitespace, NFC, and comment-format edits — so the order of presentation mutations never changes the audit verdict
+- **VERIFIES** [[render.backends.p_audit_priority]]
 

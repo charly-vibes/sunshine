@@ -9,7 +9,7 @@ traces_to = "[[audit.contract]]"
 [[constraints]]
 id = "ac_canonical"
 kind = "invariant"
-expr = "comparison runs on canonical forms published per profile — whitespace collapsing, NFC, claim-key ordering; canonicalization never repairs content differences"
+expr = "comparison runs on canonical forms published per profile — whitespace collapsing, NFC, claim-key ordering; canonicalization strips presentation-only derivations before comparison — annex formatting, tooltips (pdf annotation popup text, excluding the annotation's claim key), and comment formatting (marker spelling, reflow, attribute order) — while comment payloads carrying claim bindings are content and are never stripped; canonicalization never repairs content differences"
 traces_to = "[[audit.contract]]"
 
 [[constraints]]
@@ -52,4 +52,10 @@ traces_to = "[[audit.contract]]"
 id = "ac_human_edits"
 kind = "advisory"
 expr = "a human-edited text artifact that drifts from its manifest is the correction signal; edits flow to the claim store as proposals through the store's own review path; sunshine never writes to the store"
+traces_to = "[[audit.contract]]"
+
+[[constraints]]
+id = "ac_unparseable"
+kind = "invariant"
+expr = "an artifact lacking a render stamp or failing skeleton parse — truncated, wrong shape, or garbage — refuses with a distinct machine-readable class (unparseable) naming the remediation; never a panic, never a usage error, never silence"
 traces_to = "[[audit.contract]]"

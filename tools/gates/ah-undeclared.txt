@@ -16,6 +16,7 @@
 
 # anchor-manifest (sun-mqs; relations -> sun-t2m)
 anchor-manifest/p-claim-fields          # sun-mqs
+anchor-manifest/p-claim-key-canon       # sun-mkj
 anchor-manifest/p-deterministic-export  # sun-mqs
 anchor-manifest/p-digest                # sun-mqs
 anchor-manifest/p-relations             # sun-t2m
@@ -47,10 +48,13 @@ audit-contract/p-named-drift            # sun-jh6
 audit-contract/p-profile-match          # sun-jh6
 audit-contract/p-read-only              # sun-jh6
 audit-contract/p-roundtrip              # sun-jh6
+audit-contract/p-unparseable            # sun-xt8
 
 # render-backends (per-backend tickets; ship-bar properties -> sun-g0c)
 render-backends/p-audit-pairing         # sun-g0c
+render-backends/p-audit-priority        # sun-qzb
 render-backends/p-degrade               # sun-14e
+render-backends/p-deterministic-pdf     # sun-g0c
 render-backends/p-geometry-carrier      # sun-jh6
 render-backends/p-html-selfcontained    # sun-x7d
 render-backends/p-md-spans              # sun-14e
@@ -58,6 +62,7 @@ render-backends/p-new-backend           # sun-g0c
 render-backends/p-org-subset            # sun-tiv
 render-backends/p-pdf-annotations       # sun-4y6
 render-backends/p-profile               # sun-jh6
+render-backends/p-ship-bar              # sun-g0c
 
 # render-contract (sun-jh6)
 render-contract/p-atomic-write          # sun-jh6
@@ -68,11 +73,9 @@ render-contract/p-source-immutable      # sun-jh6
 render-contract/p-stamp                 # sun-jh6
 render-contract/p-stateless             # sun-jh6
 
-# fleet-boundaries (static -> sun-e0f; render-dependent -> sun-evg;
-# seam/version contract decisions -> sun-mkj)
-fleet-boundaries/p-claim-owner          # sun-e0f
+# fleet-boundaries (static claim/geometry owner landed with sun-e0f;
+# render-dependent -> sun-evg; seam/version contract decisions -> sun-mkj)
 fleet-boundaries/p-deletion-test        # sun-evg
-fleet-boundaries/p-geometry-owner       # sun-e0f
 fleet-boundaries/p-no-persistence       # sun-evg
 fleet-boundaries/p-readonly-view        # sun-evg
 fleet-boundaries/p-seam-published       # sun-mkj

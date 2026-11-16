@@ -101,3 +101,11 @@ fn p_schema_published() {
         "the schema document validates every accepted record and rejects every refused one"
     );
 }
+
+// id: p_claim_key_canon
+// generator: claim-key pairs differing only by NFC vs NFD form, key sets mixing NFC and NFD forms of distinct keys whose raw and normalized orderings differ, plus empty and whitespace-only keys
+// predicate: normalization-variant duplicate keys refuse with am_strict_parse's duplicate reason; empty or whitespace-only keys refuse; claim-key ordering is decided on the normalized form
+#[test]
+fn p_claim_key_canon() {
+    todo_predicate!("normalization-variant duplicate keys refuse with am_strict_parse's duplicate reason; empty or whitespace-only keys refuse; claim-key ordering is decided on the normalized form");
+}

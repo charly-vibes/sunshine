@@ -6,6 +6,8 @@
 //! block's assertion body; predicates not yet translated fail in
 //! `verify` via `todo_predicate!`, never at artifact emission.
 
+use proptest::prelude::*;
+
 /// Marker for predicates not yet translated to Rust: compiles here,
 /// panics when executed — execution is `verify`'s job. A predicate
 /// opting in with **rust:** compiles as a real assertion instead
@@ -16,6 +18,21 @@ macro_rules! todo_predicate {
     };
 }
 
+/// Generated strategies — one per generator named in the spec rows.
+/// Each yields a String (the generator's name; executable
+/// fragments bind these directly — Revision 15).
+pub mod spec_gen {
+    use super::*;
+
+    pub fn tooltips() -> impl Strategy<Value = String> {
+        Just("tooltips".into())
+    }
+
+    pub fn formatting() -> impl Strategy<Value = String> {
+        Just("formatting".into())
+    }
+}
+
 // id: p_roundtrip
 // generator: generated manifests rendered through each shipped backend
 // predicate: audit(render(m)) reports equivalence for each backend; no backend reaches shipped state while its round-trip fails
@@ -24,12 +41,14 @@ fn p_roundtrip() {
     todo_predicate!("audit(render(m)) reports equivalence for each backend; no backend reaches shipped state while its round-trip fails");
 }
 
-// id: p_canonical
-// generator: artifacts differing only in whitespace form or NFC position under the published canonicalizer
-// predicate: canonical differences audit clean; content differences still drift
-#[test]
-fn p_canonical() {
-    todo_predicate!("canonical differences audit clean; content differences still drift");
+proptest! {
+    // id: p_canonical
+    // generator: artifacts differing only in whitespace form, NFC position, or presentation-only derivations — annex formatting, tooltips (pdf annotation popup text, excluding the annotation's claim key), and comment formatting (marker spelling, reflow, attribute order) — under the published canonicalizer
+    // predicate: canonical differences audit clean; artifacts differing only in presentation-only derivations audit clean and never drift — comment payloads carrying claim bindings are content, so changing them drifts; content differences still drift
+    #[test]
+    fn p_canonical(v0 in spec_gen::tooltips(), v1 in spec_gen::formatting()) {
+        todo_predicate!("canonical differences audit clean; artifacts differing only in presentation-only derivations audit clean and never drift — comment payloads carrying claim bindings are content, so changing them drifts; content differences still drift");
+    }
 }
 
 // id: p_named_drift
@@ -88,4 +107,12 @@ fn p_manifest_identity() {
 #[test]
 fn p_human_edits() {
     todo_predicate!("the drift report stands as the correction signal; no store write occurs from the audit path");
+}
+
+// id: p_unparseable
+// generator: artifacts lacking a render stamp or failing the skeleton parse — truncated, wrong shape, or garbage — plus well-formed rendered artifacts
+// predicate: each refuses with the distinct machine-readable class unparseable naming the remediation — never a panic, never a usage error, never silence; an artifact whose render stamp is present and whose skeleton parse succeeds proceeds past `loaded` to verified or drifted, never refused
+#[test]
+fn p_unparseable() {
+    todo_predicate!("each refuses with the distinct machine-readable class unparseable naming the remediation — never a panic, never a usage error, never silence; an artifact whose render stamp is present and whose skeleton parse succeeds proceeds past `loaded` to verified or drifted, never refused");
 }

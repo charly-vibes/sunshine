@@ -53,3 +53,21 @@ id = "bk_new_backend"
 kind = "extension_point"
 expr = "a new format enters by publishing a profile, an emitter, and an audit parser, amending the render contract's closed format set in the same change"
 traces_to = "[[render.backends]]"
+
+[[constraints]]
+id = "rb_ship_bar"
+kind = "invariant"
+expr = "a backend counts as shipped only when four criteria hold together — totality over the anchor manifest strict parser's domain (every manifest am_strict_parse accepts renders with its full claim set and no claim dropped; input outside that domain refuses by name at render time with a machine-readable reason, never a silent subset), round-trip green (audit(render(m)) == m over the generated suite), the backend's render command answers the render contract's suite envelope (rc_envelope) on both success and refusal with exit status mirroring ok, and byte-reproducible output for identical inputs; absence of any one means the backend is unshipped"
+traces_to = "[[render.backends]]"
+
+[[constraints]]
+id = "rb_deterministic_pdf"
+kind = "invariant"
+expr = "every timestamp, document ID, and other nondeterministic embedded value in pdf output is derived from the manifest digest; no wall-clock or random source may reach artifact bytes, so a pdf backend that cannot pin them does not ship"
+traces_to = "[[render.backends]]"
+
+[[constraints]]
+id = "rb_audit_priority"
+kind = "invariant"
+expr = "no backend profile choice may break the audit round-trip; a render/audit conflict is always a backend defect, never an audit relaxation"
+traces_to = "[[render.backends]]"

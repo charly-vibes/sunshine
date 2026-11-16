@@ -28,6 +28,8 @@ Next ==
   \/ vpc = "loaded" /\ vpc' = "refused"
   \* reverify: drifted -> drifted (guard: [[audit.contract.ac_deterministic]])
   \/ vpc = "drifted" /\ vpc' = "drifted"
+  \* refuse_unparseable: loaded -> refused (guard: [[audit.contract.ac_unparseable]])
+  \/ vpc = "loaded" /\ vpc' = "refused"
   \* stuttering: guards are prose (uninterpreted) — a terminal
   \* state must not read as an engine-side deadlock
   \/ UNCHANGED vpc

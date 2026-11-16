@@ -59,3 +59,9 @@ id = "am_schema_published"
 kind = "extension_point"
 expr = "the manifest JSON Schema is published for the producer (bajan export) and the consumer (sunshine) to conform to"
 traces_to = "[[anchor.manifest]]"
+
+[[constraints]]
+id = "am_claim_key_canon"
+kind = "invariant"
+expr = "a claim_key is a nonempty, non-whitespace-only string; claim-key equality is decided on the NFC form, so two keys differing only by Unicode normalization form denote the same claim and a second occurrence refuses as a duplicate under am_strict_parse; duplicate detection and claim-key ordering both use the normalized key; NFC applies to claim-key equality only — stored claim text and episode text are never normalized by this rule"
+traces_to = "[[anchor.manifest]]"

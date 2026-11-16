@@ -6,6 +6,8 @@
 //! block's assertion body; predicates not yet translated fail in
 //! `verify` via `todo_predicate!`, never at artifact emission.
 
+use proptest::prelude::*;
+
 /// Marker for predicates not yet translated to Rust: compiles here,
 /// panics when executed — execution is `verify`'s job. A predicate
 /// opting in with **rust:** compiles as a real assertion instead
@@ -14,6 +16,21 @@ macro_rules! todo_predicate {
     ($reason:expr) => {
         todo!("{}", $reason)
     };
+}
+
+/// Generated strategies — one per generator named in the spec rows.
+/// Each yields a String (the generator's name; executable
+/// fragments bind these directly — Revision 15).
+pub mod spec_gen {
+    use super::*;
+
+    pub fn only() -> impl Strategy<Value = String> {
+        Just("only".into())
+    }
+
+    pub fn bearing() -> impl Strategy<Value = String> {
+        Just("bearing".into())
+    }
 }
 
 // id: p_profile
@@ -92,4 +109,55 @@ fn p_new_backend() {
     todo_predicate!(
         "admission requires the published triple and the amended closed set in one change"
     );
+}
+
+// id: p_ship_bar
+// generator: the backend roster evaluated against the four ship criteria
+// predicate: a backend counts as shipped only when totality over the anchor manifest strict parser's domain (every manifest am_strict_parse accepts renders with its full claim set and no claim dropped; input outside that domain refuses by name at render time with a machine-readable reason, never a silent subset), round-trip green (audit(render(m)) == m over the generated suite), the backend's render command answers the render contract's suite envelope (rc_envelope) on both success and refusal with exit status mirroring ok, and byte-reproducible output for identical inputs all hold together; absence of any one leaves it unshipped
+#[test]
+fn p_ship_bar() {
+    todo_predicate!("a backend counts as shipped only when totality over the anchor manifest strict parser's domain (every manifest am_strict_parse accepts renders with its full claim set and no claim dropped; input outside that domain refuses by name at render time with a machine-readable reason, never a silent subset), round-trip green (audit(render(m)) == m over the generated suite), the backend's render command answers the render contract's suite envelope (rc_envelope) on both success and refusal with exit status mirroring ok, and byte-reproducible output for identical inputs all hold together; absence of any one leaves it unshipped");
+}
+
+// id: p_deterministic_pdf
+// generator: pdf renders of identical manifests across wall-clock hour and host differences
+// predicate: every timestamp, document ID, and other nondeterministic embedded value is derived from the manifest digest; no wall-clock or random source reaches artifact bytes, so artifact bytes are identical across runs and a pdf backend that cannot pin them does not ship
+#[test]
+fn p_deterministic_pdf() {
+    todo_predicate!("every timestamp, document ID, and other nondeterministic embedded value is derived from the manifest digest; no wall-clock or random source reaches artifact bytes, so artifact bytes are identical across runs and a pdf backend that cannot pin them does not ship");
+}
+
+proptest! {
+    // id: p_audit_priority
+    // case: identity
+    // generator: backend render-and-audit pairs over artifacts mutated per the law's case classes — identity, presentation-only (whitespace, NFC form, comment marker spelling, reflow, attribute order), content-bearing (claim field and evidence edits), and composed presentation edits in both orders — per backend profile
+    // predicate: **identity:** an unmodified render audits clean for every backend **presentation-mutation:** edits confined to the published canonicalizer's presentation-only classes — whitespace, NFC form, comment marker spelling, reflow, attribute order — canonicalize clean and never drift **content-mutation:** any content-bearing edit drifts with a named class — a render/audit conflict is always a backend defect, never an audit relaxation, so no profile choice breaks the round-trip **associativity:** canonicalizing composed presentation edits in either order yields the same clean form — canonicalize(w∘t∘r(m)) = canonicalize(r∘t∘w(m)) = canonicalize(m), where w, t, and r are whitespace, NFC, and comment-format edits — so the order of presentation mutations never changes the audit verdict
+    #[test]
+    fn p_audit_priority_identity(v0 in spec_gen::only(), v1 in spec_gen::bearing()) {
+        todo_predicate!("**identity:** an unmodified render audits clean for every backend **presentation-mutation:** edits confined to the published canonicalizer's presentation-only classes — whitespace, NFC form, comment marker spelling, reflow, attribute order — canonicalize clean and never drift **content-mutation:** any content-bearing edit drifts with a named class — a render/audit conflict is always a backend defect, never an audit relaxation, so no profile choice breaks the round-trip **associativity:** canonicalizing composed presentation edits in either order yields the same clean form — canonicalize(w∘t∘r(m)) = canonicalize(r∘t∘w(m)) = canonicalize(m), where w, t, and r are whitespace, NFC, and comment-format edits — so the order of presentation mutations never changes the audit verdict");
+    }
+    // id: p_audit_priority
+    // case: presentation-mutation
+    // generator: backend render-and-audit pairs over artifacts mutated per the law's case classes — identity, presentation-only (whitespace, NFC form, comment marker spelling, reflow, attribute order), content-bearing (claim field and evidence edits), and composed presentation edits in both orders — per backend profile
+    // predicate: **identity:** an unmodified render audits clean for every backend **presentation-mutation:** edits confined to the published canonicalizer's presentation-only classes — whitespace, NFC form, comment marker spelling, reflow, attribute order — canonicalize clean and never drift **content-mutation:** any content-bearing edit drifts with a named class — a render/audit conflict is always a backend defect, never an audit relaxation, so no profile choice breaks the round-trip **associativity:** canonicalizing composed presentation edits in either order yields the same clean form — canonicalize(w∘t∘r(m)) = canonicalize(r∘t∘w(m)) = canonicalize(m), where w, t, and r are whitespace, NFC, and comment-format edits — so the order of presentation mutations never changes the audit verdict
+    #[test]
+    fn p_audit_priority_presentation_mutation(v0 in spec_gen::only(), v1 in spec_gen::bearing()) {
+        todo_predicate!("**identity:** an unmodified render audits clean for every backend **presentation-mutation:** edits confined to the published canonicalizer's presentation-only classes — whitespace, NFC form, comment marker spelling, reflow, attribute order — canonicalize clean and never drift **content-mutation:** any content-bearing edit drifts with a named class — a render/audit conflict is always a backend defect, never an audit relaxation, so no profile choice breaks the round-trip **associativity:** canonicalizing composed presentation edits in either order yields the same clean form — canonicalize(w∘t∘r(m)) = canonicalize(r∘t∘w(m)) = canonicalize(m), where w, t, and r are whitespace, NFC, and comment-format edits — so the order of presentation mutations never changes the audit verdict");
+    }
+    // id: p_audit_priority
+    // case: content-mutation
+    // generator: backend render-and-audit pairs over artifacts mutated per the law's case classes — identity, presentation-only (whitespace, NFC form, comment marker spelling, reflow, attribute order), content-bearing (claim field and evidence edits), and composed presentation edits in both orders — per backend profile
+    // predicate: **identity:** an unmodified render audits clean for every backend **presentation-mutation:** edits confined to the published canonicalizer's presentation-only classes — whitespace, NFC form, comment marker spelling, reflow, attribute order — canonicalize clean and never drift **content-mutation:** any content-bearing edit drifts with a named class — a render/audit conflict is always a backend defect, never an audit relaxation, so no profile choice breaks the round-trip **associativity:** canonicalizing composed presentation edits in either order yields the same clean form — canonicalize(w∘t∘r(m)) = canonicalize(r∘t∘w(m)) = canonicalize(m), where w, t, and r are whitespace, NFC, and comment-format edits — so the order of presentation mutations never changes the audit verdict
+    #[test]
+    fn p_audit_priority_content_mutation(v0 in spec_gen::only(), v1 in spec_gen::bearing()) {
+        todo_predicate!("**identity:** an unmodified render audits clean for every backend **presentation-mutation:** edits confined to the published canonicalizer's presentation-only classes — whitespace, NFC form, comment marker spelling, reflow, attribute order — canonicalize clean and never drift **content-mutation:** any content-bearing edit drifts with a named class — a render/audit conflict is always a backend defect, never an audit relaxation, so no profile choice breaks the round-trip **associativity:** canonicalizing composed presentation edits in either order yields the same clean form — canonicalize(w∘t∘r(m)) = canonicalize(r∘t∘w(m)) = canonicalize(m), where w, t, and r are whitespace, NFC, and comment-format edits — so the order of presentation mutations never changes the audit verdict");
+    }
+    // id: p_audit_priority
+    // case: associativity
+    // generator: backend render-and-audit pairs over artifacts mutated per the law's case classes — identity, presentation-only (whitespace, NFC form, comment marker spelling, reflow, attribute order), content-bearing (claim field and evidence edits), and composed presentation edits in both orders — per backend profile
+    // predicate: **identity:** an unmodified render audits clean for every backend **presentation-mutation:** edits confined to the published canonicalizer's presentation-only classes — whitespace, NFC form, comment marker spelling, reflow, attribute order — canonicalize clean and never drift **content-mutation:** any content-bearing edit drifts with a named class — a render/audit conflict is always a backend defect, never an audit relaxation, so no profile choice breaks the round-trip **associativity:** canonicalizing composed presentation edits in either order yields the same clean form — canonicalize(w∘t∘r(m)) = canonicalize(r∘t∘w(m)) = canonicalize(m), where w, t, and r are whitespace, NFC, and comment-format edits — so the order of presentation mutations never changes the audit verdict
+    #[test]
+    fn p_audit_priority_associativity(v0 in spec_gen::only(), v1 in spec_gen::bearing()) {
+        todo_predicate!("**identity:** an unmodified render audits clean for every backend **presentation-mutation:** edits confined to the published canonicalizer's presentation-only classes — whitespace, NFC form, comment marker spelling, reflow, attribute order — canonicalize clean and never drift **content-mutation:** any content-bearing edit drifts with a named class — a render/audit conflict is always a backend defect, never an audit relaxation, so no profile choice breaks the round-trip **associativity:** canonicalizing composed presentation edits in either order yields the same clean form — canonicalize(w∘t∘r(m)) = canonicalize(r∘t∘w(m)) = canonicalize(m), where w, t, and r are whitespace, NFC, and comment-format edits — so the order of presentation mutations never changes the audit verdict");
+    }
 }

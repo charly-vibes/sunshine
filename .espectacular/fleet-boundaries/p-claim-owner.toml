@@ -1,0 +1,11 @@
+id = "p-claim-owner"
+description = "claim ownership: the CLI exposes no claim-creation or mutation path and --manifest is the only claim input (fleet.boundaries p_claim_owner)"
+archetype = "NR"
+status = "active"
+superseded_by = ""
+authored_with = "0.12.2"
+
+[tests]
+cargo = [
+    { flags = "p_claim_owner", timeout_seconds = 60 },
+]

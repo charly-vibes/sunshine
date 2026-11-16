@@ -51,6 +51,16 @@ If a capability would still make sense with sunshine deleted, it belongs
 to sunset or bajan — refused here (`specs/fleet-boundaries.md`,
 `fb_deletion_test`).
 
+## Seam compatibility status
+
+The two seam contracts sunshine consumes, plus the tool version its artifacts are stamped with:
+
+| seam | owner | pinned version |
+|------|-------|----------------|
+| anchor manifest schema | bajan | not yet published — sun-mqs |
+| descriptor contract | sunset | sunset-owned — not pinned here |
+| sunshine | this repo | 0.1.0 |
+
 ## Spec-first
 
 Every behavior lands as a spec in `specs/` (specodelic format) before
