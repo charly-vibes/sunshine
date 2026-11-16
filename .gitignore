@@ -10,6 +10,10 @@
 .testaruda/
 .pretender/
 
+# wai pipeline run state (machine-local; the artifacts it gates are committed)
+.wai/pipeline-runs/
+.wai/resources/pipelines/.last-run
+
 # rust build artifacts
 /target/
 
