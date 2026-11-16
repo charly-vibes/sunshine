@@ -1,0 +1,8 @@
+plugins = []
+
+[project]
+name = "sunshine"
+version = "2026.10.19"
+description = ""
+
+[llm]

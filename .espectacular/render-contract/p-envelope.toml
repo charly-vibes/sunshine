@@ -1,0 +1,12 @@
+id = "p-envelope"
+description = "suite envelope shape: ok flag, versions, kind, data; errors carry non-empty remediation (render.contract rc_envelope)"
+archetype = "NR"
+status = "active"
+superseded_by = ""
+authored_with = "0.12.2"
+
+[tests]
+cargo = [
+    { flags = "error_envelope_carries_nonempty_remediation", timeout_seconds = 60 },
+    { flags = "ok_envelope_shape", timeout_seconds = 60 },
+]

@@ -1,0 +1,61 @@
+source = "render.contract"
+
+[[constraints]]
+id = "rc_purity"
+kind = "invariant"
+expr = "render is a pure function of (manifest, descriptor, source); no network, no wall clock, no ambient state; identical inputs yield byte-identical outputs"
+traces_to = "[[render.contract]]"
+
+[[constraints]]
+id = "rc_stateless"
+kind = "invariant"
+expr = "the renderer persists no state between invocations; a cache, if present, is transparent: deleting it never changes output bytes"
+traces_to = "[[render.contract]]"
+
+[[constraints]]
+id = "rc_closed_formats"
+kind = "invariant"
+expr = "the format set is closed and enumerated (pdf, md, org, html in v1); an unknown format refuses with remediation naming the set; adding a format amends this spec and the backends spec in one change"
+traces_to = "[[render.contract]]"
+
+[[constraints]]
+id = "rc_stamp"
+kind = "invariant"
+expr = "each output embeds a render stamp: manifest digest, descriptor id and version, tool name and version, backend id and profile version; an unstamped output is a defect"
+traces_to = "[[render.contract]]"
+
+[[constraints]]
+id = "rc_envelope"
+kind = "invariant"
+expr = "each command answers the suite envelope {ok, envelope_version, cli_version, envelope_kind, data}; exit status mirrors ok; each error carries a non-empty remediation"
+traces_to = "[[render.contract]]"
+
+[[constraints]]
+id = "rc_no_extraction"
+kind = "invariant"
+expr = "the renderer performs no text or claim extraction; it consumes descriptor and manifest only — geometry authority is sunset, claim authority is bajan"
+traces_to = "[[render.contract]]"
+
+[[constraints]]
+id = "rc_no_claim_semantics"
+kind = "invariant"
+expr = "the renderer never filters, ranks, merges, or re-words claims; presentation choices never drop a claim from the output"
+traces_to = "[[render.contract]]"
+
+[[constraints]]
+id = "rc_atomic_write"
+kind = "invariant"
+expr = "each output artifact is written whole or not at all; a failed render leaves no partial file"
+traces_to = "[[render.contract]]"
+
+[[constraints]]
+id = "rc_source_immutable"
+kind = "invariant"
+expr = "render never mutates the source document, the descriptor, or the manifest; each backend writes a new output file"
+traces_to = "[[render.contract]]"
+
+[[constraints]]
+id = "rc_input_present"
+kind = "invariant"
+expr = "an invocation with a missing or unreadable input refuses before any output work, with a machine-readable reason naming the missing input"
+traces_to = "[[render.contract]]"

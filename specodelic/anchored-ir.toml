@@ -1,0 +1,55 @@
+source = "anchored.ir"
+
+[[constraints]]
+id = "ai_single_ir"
+kind = "invariant"
+expr = "each backend consumes the anchored-document IR alone; no backend reads the manifest, the descriptor, or the source document directly"
+traces_to = "[[anchored.ir]]"
+
+[[constraints]]
+id = "ai_reading_order"
+kind = "invariant"
+expr = "IR text order comes from the descriptor's logical structure; a span lacking descriptor order carries a typed unordered marker and renders at a fallback position declared in the output; the pipeline never invents ordering"
+traces_to = "[[anchored.ir]]"
+
+[[constraints]]
+id = "ai_charrange_anchor"
+kind = "invariant"
+expr = "an anchor is a half-open character range over the IR text carrying a claim-key list; a span realizing several claims carries each key in the list, never a merged super-claim"
+traces_to = "[[anchored.ir]]"
+
+[[constraints]]
+id = "ai_verbatim_text"
+kind = "invariant"
+expr = "IR text is verbatim descriptor and episode text; the pipeline never normalizes, corrects, or re-words it; whitespace handling is published and deterministic"
+traces_to = "[[anchored.ir]]"
+
+[[constraints]]
+id = "ai_deterministic_join"
+kind = "invariant"
+expr = "the same (manifest, descriptor) pair yields an identical IR; overlapping anchor ranges resolve by the published total order (start, length, claim key), never by input order"
+traces_to = "[[anchored.ir]]"
+
+[[constraints]]
+id = "ai_unanchored"
+kind = "invariant"
+expr = "a claim whose evidence span cannot be located in the IR text is carried as unanchored with a machine-readable reason and rendered in a claims annex; it is never silently dropped and never fuzzy-matched"
+traces_to = "[[anchored.ir]]"
+
+[[constraints]]
+id = "ai_descriptor_required"
+kind = "invariant"
+expr = "a join without a parseable descriptor refuses with a machine-readable reason naming the missing input; rendering from a manifest alone is impossible"
+traces_to = "[[anchored.ir]]"
+
+[[constraints]]
+id = "ai_no_semantics"
+kind = "invariant"
+expr = "IR construction performs no claim filtering, ranking, or re-wording; selection happened upstream at export; the IR carries what the manifest carries"
+traces_to = "[[anchored.ir]]"
+
+[[constraints]]
+id = "ai_ir_schema"
+kind = "extension_point"
+expr = "the IR data model is published so backends and audit parsers conform"
+traces_to = "[[anchored.ir]]"

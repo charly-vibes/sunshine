@@ -1,0 +1,19 @@
+[pretender]
+mode = "gate"
+languages = ["auto"]
+exclude = ["vendor/**", "node_modules/**", "**/*_generated.*", "specodelic/*_props.rs"]
+
+[roles.test]
+paths = ["tests/**", "**/*_test.*"]
+
+[roles.library]
+paths = ["src/**"]
+
+[roles.script]
+paths = ["scripts/**", "tools/**"]
+
+[roles.generated]
+paths = ["**/*_generated.*"]
+
+[roles.vendor]
+paths = ["vendor/**", "node_modules/**"]

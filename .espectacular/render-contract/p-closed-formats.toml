@@ -1,0 +1,11 @@
+id = "p-closed-formats"
+description = "closed format set: members dispatch, unknown formats refuse with remediation naming the set (render.contract rc_closed_formats)"
+archetype = "NR"
+status = "active"
+superseded_by = ""
+authored_with = "0.12.2"
+
+[tests]
+cargo = [
+    { flags = "unknown_format_is_refused_with_remediation", timeout_seconds = 60 },
+]

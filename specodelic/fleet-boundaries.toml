@@ -1,0 +1,43 @@
+source = "fleet.boundaries"
+
+[[constraints]]
+id = "fb_geometry_owner"
+kind = "invariant"
+expr = "sunshine derives each page and word location from DSC descriptors produced by sunset; it contains no PDF text extraction and never re-derives a locator; a resolution failure names the descriptor instead of guessing"
+traces_to = "[[fleet.boundaries]]"
+
+[[constraints]]
+id = "fb_claim_owner"
+kind = "invariant"
+expr = "claim lifecycle — extraction, adoption, invalidation, contradiction — lives in bajan; sunshine reads claims only through the anchor manifest and its code contains no claim-creation path"
+traces_to = "[[fleet.boundaries]]"
+
+[[constraints]]
+id = "fb_readonly_view"
+kind = "invariant"
+expr = "a rendered artifact is a view; mutation flows back to bajan as proposals through its human-adoption path; a rendered artifact is never a source of truth for claims or geometry"
+traces_to = "[[fleet.boundaries]]"
+
+[[constraints]]
+id = "fb_no_persistence"
+kind = "invariant"
+expr = "sunshine holds no durable state between invocations; every artifact is rebuildable from (manifest, descriptor, source, tool version); deleting sunshine loses no information"
+traces_to = "[[fleet.boundaries]]"
+
+[[constraints]]
+id = "fb_deletion_test"
+kind = "invariant"
+expr = "a proposed capability that would still make sense if sunshine were deleted belongs to sunset or bajan and is refused at this repo's review"
+traces_to = "[[fleet.boundaries]]"
+
+[[constraints]]
+id = "fb_version_contract"
+kind = "advisory"
+expr = "sunshine pins the compatible schema versions of the anchor manifest (bajan side) and the descriptor (sunset side); version drift is refused loudly at the seam with remediation"
+traces_to = "[[fleet.boundaries]]"
+
+[[constraints]]
+id = "fb_seam_published"
+kind = "extension_point"
+expr = "the two seam contracts — the anchor manifest schema and the descriptor contract — are published for the neighbor tools to conform to"
+traces_to = "[[fleet.boundaries]]"

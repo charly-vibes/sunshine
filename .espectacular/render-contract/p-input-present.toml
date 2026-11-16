@@ -1,0 +1,11 @@
+id = "p-input-present"
+description = "missing or unreadable inputs refuse before any output work, naming the input (render.contract rc_input_present)"
+archetype = "NR"
+status = "active"
+superseded_by = ""
+authored_with = "0.12.2"
+
+[tests]
+cargo = [
+    { flags = "missing_manifest_refused_before_format_work", timeout_seconds = 60 },
+]

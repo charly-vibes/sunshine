@@ -1,0 +1,55 @@
+source = "render.backends"
+
+[[constraints]]
+id = "bk_profile"
+kind = "invariant"
+expr = "each backend publishes a profile — grammar subset, serialization rules, version — and emission follows it exactly; profile versions ride the render stamp"
+traces_to = "[[render.backends]]"
+
+[[constraints]]
+id = "bk_pdf_annotations"
+kind = "invariant"
+expr = "the pdf backend renders anchors as highlight annotations keyed by claim key, embeds the manifest as a file attachment, and writes the render stamp as XMP; the source page content stream is never modified"
+traces_to = "[[render.backends]]"
+
+[[constraints]]
+id = "bk_md_spans"
+kind = "invariant"
+expr = "the md backend emits bracketed spans with claim-key attributes in the pandoc flavor; the commonmark flavor moves bindings to HTML comments; both flavors carry a frontmatter registry and a claims section with identical claim fields"
+traces_to = "[[render.backends]]"
+
+[[constraints]]
+id = "bk_org_subset"
+kind = "invariant"
+expr = "the org backend emits the strict org profile — claim and entity custom links inline, one heading per claim with a property drawer carrying frame, roles, locator, and lineage, locator properties org-noter-compatible; babel, tables, and export-block positioning are excluded from the profile grammar"
+traces_to = "[[render.backends]]"
+
+[[constraints]]
+id = "bk_html_selfcontained"
+kind = "invariant"
+expr = "the html backend emits one self-contained file: visible claim markup plus the manifest embedded as a JSON script block; no external assets or network references"
+traces_to = "[[render.backends]]"
+
+[[constraints]]
+id = "bk_geometry_carrier"
+kind = "invariant"
+expr = "text backends carry locators as data in frontmatter and property values and never render geometry; geometry rendering belongs to the pdf backend alone"
+traces_to = "[[render.backends]]"
+
+[[constraints]]
+id = "bk_audit_pairing"
+kind = "invariant"
+expr = "each backend ships with a parser implementing the audit contract for its profile; a backend without a passing round-trip gate does not ship"
+traces_to = "[[render.backends]]"
+
+[[constraints]]
+id = "bk_degrade"
+kind = "advisory"
+expr = "emitted md, org, and html remain legible to tools ignorant of the profile; anchors, drawers, and comments read as plain text"
+traces_to = "[[render.backends]]"
+
+[[constraints]]
+id = "bk_new_backend"
+kind = "extension_point"
+expr = "a new format enters by publishing a profile, an emitter, and an audit parser, amending the render contract's closed format set in the same change"
+traces_to = "[[render.backends]]"

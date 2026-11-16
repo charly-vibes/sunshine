@@ -1,0 +1,49 @@
+source = "audit.contract"
+
+[[constraints]]
+id = "ac_roundtrip"
+kind = "invariant"
+expr = "for each shipped backend, auditing a rendered artifact against its manifest reports equivalence after published canonicalization; a failing audit is a defect in the backend, never in the auditor"
+traces_to = "[[audit.contract]]"
+
+[[constraints]]
+id = "ac_canonical"
+kind = "invariant"
+expr = "comparison runs on canonical forms published per profile — whitespace collapsing, NFC, claim-key ordering; canonicalization never repairs content differences"
+traces_to = "[[audit.contract]]"
+
+[[constraints]]
+id = "ac_named_drift"
+kind = "invariant"
+expr = "each mismatch is reported as a named drift item — claim key, field, expected, actual — in a distinct machine-readable class (absent claim, added claim, mutated span); the report never truncates the drift list"
+traces_to = "[[audit.contract]]"
+
+[[constraints]]
+id = "ac_read_only"
+kind = "invariant"
+expr = "the auditor never rewrites the artifact or the manifest; repair is a human act upstream"
+traces_to = "[[audit.contract]]"
+
+[[constraints]]
+id = "ac_deterministic"
+kind = "invariant"
+expr = "audit is a pure function of (artifact, manifest, profile); repeated audits yield byte-identical reports"
+traces_to = "[[audit.contract]]"
+
+[[constraints]]
+id = "ac_exit_mirror"
+kind = "invariant"
+expr = "audit exits nonzero on any drift, and its envelope reports ok:false naming each drift"
+traces_to = "[[audit.contract]]"
+
+[[constraints]]
+id = "ac_profile_match"
+kind = "invariant"
+expr = "the auditor parses only the profile version stamped in the artifact; an unknown or newer profile refuses with remediation rather than guessing"
+traces_to = "[[audit.contract]]"
+
+[[constraints]]
+id = "ac_human_edits"
+kind = "advisory"
+expr = "a human-edited text artifact that drifts from its manifest is the correction signal; edits flow to the claim store as proposals through the store's own review path; sunshine never writes to the store"
+traces_to = "[[audit.contract]]"
