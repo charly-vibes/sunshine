@@ -96,25 +96,40 @@ jobs:
         run: |
           cargo install --locked \
             espectacular@0.12.2 \
-            specodelic@0.12.1 \
+            specodelic@0.14.0 \
             testaruda@0.5.9 \
-            pretender@0.7.0 \
-            wai-cli@2026.10.10 \
-            dont-cli@0.2.2
+            pretender@0.11.1 \
+            wai-cli@2026.11.11
 
       - name: Install openspec (npm pin, §4)
         run: npm install -g @fission-ai/openspec@0.19.0
 
+      - name: Install dont (pinned GitHub release, §4)
+        run: |
+          tmp=$(mktemp -d)
+          curl -fsSL "https://github.com/charly-vibes/dont/releases/download/v0.4.2/dont_0.4.2_linux_amd64.tar.gz" \
+            -o "$tmp/dont.tgz"
+          # dont is release-only past 0.2.2 (crates.io stops at dont-cli
+          # 0.2.2), so it installs from its own release — checksum-verified
+          # against the release's published digest, and verified again by
+          # ddl's URL-derived provenance path for anyone using the fleet
+          # installer. (v0.4.1 shipped a binary whose own --version said
+          # 0.4.0; the v0.4.2 build fixes that identity.)
+          echo "1fa3e1be8f6475de2b055a6703f77b730eb3ab6c143278ef2c6821bbc38bf38b  $tmp/dont.tgz" \
+            | sha256sum -c -
+          tar -xzf "$tmp/dont.tgz" -C "$tmp" dont
+          sudo mv "$tmp/dont" /usr/local/bin/dont
+
       - name: Install bd (beads, pinned GitHub release, §4)
         run: |
           tmp=$(mktemp -d)
-          curl -fsSL "https://github.com/gastownhall/beads/releases/download/v1.3.0/beads_1.3.0_linux_amd64.tar.gz" \
+          curl -fsSL "https://github.com/gastownhall/beads/releases/download/v1.3.4/beads_1.3.4_linux_amd64.tar.gz" \
             -o "$tmp/bd.tgz"
           # A pinned URL is not a pinned artifact: a release asset can be
           # re-cut or tampered with under the same tag, and this tarball is
           # extracted and installed as root. Verify it against the checksum
           # published in that release's checksums.txt before we unpack it.
-          echo "2f92b904ecf35b607e44dc5c39229173af69c54f1183e8d709f1773540cdcf3b  $tmp/bd.tgz" \
+          echo "175c26904bde3ff9168d2282ff6b56f17b17f60c22fa5acb3dacc9fb3465303a  $tmp/bd.tgz" \
             | sha256sum -c -
           # extract only the binary — the tarball also ships README/LICENSE/
           # CHANGELOG, which must not clobber the repo checkout
