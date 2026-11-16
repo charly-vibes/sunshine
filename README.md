@@ -11,7 +11,7 @@
 > concern: a stateless compiler from (manifest, descriptor, source) to
 > tagged artifacts, with a round-trip audit contract.
 > **Status:** scaffold — contract surface wired (render/audit CLI,
-> suite envelope), spec corpus lints (6 specs, 52 constraints); backends
+> suite envelope), spec corpus lints (6 specs, 54 constraints); backends
 > land spec-first (roadmap in `.beads/issues.jsonl`).
 
 ```

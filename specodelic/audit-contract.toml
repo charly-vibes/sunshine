@@ -43,6 +43,12 @@ expr = "the auditor parses only the profile version stamped in the artifact; an 
 traces_to = "[[audit.contract]]"
 
 [[constraints]]
+id = "ac_manifest_identity"
+kind = "invariant"
+expr = "before parsing, the auditor compares the artifact's stamped manifest digest against the against-manifest's own digest; a mismatch is a distinct machine-readable refusal class (foreign manifest), never a drift report"
+traces_to = "[[audit.contract]]"
+
+[[constraints]]
 id = "ac_human_edits"
 kind = "advisory"
 expr = "a human-edited text artifact that drifts from its manifest is the correction signal; edits flow to the claim store as proposals through the store's own review path; sunshine never writes to the store"

@@ -47,11 +47,11 @@ visible downstream, never quietly kept.
 |----|------|------|-----------|
 | am_schema_version | invariant | the manifest carries a schema_version; a consumer refuses any version it does not publish support for, with a machine-readable refusal naming the supported set | [[anchor.manifest]] |
 | am_claim_fields | invariant | each claim record carries exactly: claim_key, status, text, evidence_span or its typed absent marker, episode lineage of at least one episode id, locator, hedges, and provenance (extractor version, adopting actor, adoption time); confidence scores and embedding blobs never appear | [[anchor.manifest]] |
-| am_verbatim_span | invariant | an evidence_span is a verbatim substring of its referenced episode text after published whitespace-collapsing; a span failing containment exports as the typed absent marker, never silently kept | [[anchor.manifest]] |
+| am_verbatim_span | invariant | an evidence_span is a verbatim substring of its referenced episode text under the fleet whitespace rule — collapse runs of whitespace to a single space, trim ends, NFC — the one normalization this corpus permits, applied identically at export containment and at join location; a span failing containment exports as the typed absent marker, never silently kept | [[anchor.manifest]] |
 | am_semantic_locator | invariant | a locator carries a scheme plus selector payload in the descriptor's selector vocabulary; device coordinates are resolved only at render time, so re-rendering against a corrected descriptor needs no re-export | [[anchor.manifest]] |
 | am_status_filter | invariant | an export includes only claims whose status is in the explicitly requested set; the default set is active-only; a proposed claim enters a manifest only when the caller names that status | [[anchor.manifest]] |
 | am_deterministic_export | invariant | exporting the same store state with the same options yields a byte-identical manifest under stable claim-key ordering; wall-clock values ride claim provenance records only | [[anchor.manifest]] |
-| am_digest | invariant | the manifest carries a content digest over its canonical serialization; every rendered artifact stamps this digest | [[anchor.manifest]] |
+| am_digest | invariant | the manifest carries a content digest over its canonical serialization with the digest field itself excluded from the hashed form; every rendered artifact stamps this digest | [[anchor.manifest]] |
 | am_strict_parse | invariant | unknown fields, duplicate claim keys, or references to absent episodes refuse parsing with machine-readable reasons; no field is silently ignored | [[anchor.manifest]] |
 | am_relations | advisory | inter-claim relations (supports, contradicts) ride an optional relations section referencing claim keys; relation types come from the closed vocabulary published with the schema | [[anchor.manifest]] |
 | am_schema_published | extension_point | the manifest JSON Schema is published for the producer (bajan export) and the consumer (sunshine) to conform to | [[anchor.manifest]] |
@@ -82,7 +82,7 @@ visible downstream, never quietly kept.
 | p_semantic_locator | unit | [[anchor.manifest.am_semantic_locator]] | locators over the published selector vocabulary, plus malformed attempts at device coordinates | every exported locator parses as scheme plus selector payload; no coordinate value appears anywhere in the manifest |
 | p_status_filter | unit | [[anchor.manifest.am_status_filter]] | stores mixing claim statuses exported under default and explicit status sets | default export carries active claims only; a status appears exactly when the caller named it |
 | p_deterministic_export | unit | [[anchor.manifest.am_deterministic_export]] | one store state exported repeatedly, including after key-order shuffles in the source | byte-identical manifests across runs; ordering follows claim-key order regardless of source order |
-| p_digest | unit | [[anchor.manifest.am_digest]] | manifests and their canonical serializations | the digest equals the published hash of the canonical form; mutating one byte changes the digest |
+| p_digest | unit | [[anchor.manifest.am_digest]] | manifests and their canonical serializations | the digest equals the published hash of the canonical form with the digest field excluded; mutating any other byte changes the digest; mutating the digest field alone does not |
 | p_strict_parse | unit | [[anchor.manifest.am_strict_parse]] | manifests with unknown fields, duplicate keys, and absent-episode references | each case refuses with a machine-readable reason naming the offending field or key |
 | p_relations | unit | [[anchor.manifest.am_relations]] | manifests with relation sections using published and unpublished relation types | published types parse; an unpublished type refuses; a missing relations section is valid |
 | p_schema_published | unit | [[anchor.manifest.am_schema_published]] | record instances sampled from the published schema | the schema document validates every accepted record and rejects every refused one |
@@ -133,7 +133,7 @@ Every property row SHALL be verified by exactly one dedicated scenario;
 #### Scenario: p_digest
 
 - **WHEN** manifests and their canonical serializations
-- **THEN** the digest equals the published hash of the canonical form; mutating one byte changes the digest
+- **THEN** the digest equals the published hash of the canonical form with the digest field excluded; mutating any other byte changes the digest; mutating the digest field alone does not
 - **VERIFIES** [[anchor.manifest.p_digest]]
 
 #### Scenario: p_strict_parse

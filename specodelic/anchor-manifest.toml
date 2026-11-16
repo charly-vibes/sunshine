@@ -15,7 +15,7 @@ traces_to = "[[anchor.manifest]]"
 [[constraints]]
 id = "am_verbatim_span"
 kind = "invariant"
-expr = "an evidence_span is a verbatim substring of its referenced episode text after published whitespace-collapsing; a span failing containment exports as the typed absent marker, never silently kept"
+expr = "an evidence_span is a verbatim substring of its referenced episode text under the fleet whitespace rule — collapse runs of whitespace to a single space, trim ends, NFC — the one normalization this corpus permits, applied identically at export containment and at join location; a span failing containment exports as the typed absent marker, never silently kept"
 traces_to = "[[anchor.manifest]]"
 
 [[constraints]]
@@ -39,7 +39,7 @@ traces_to = "[[anchor.manifest]]"
 [[constraints]]
 id = "am_digest"
 kind = "invariant"
-expr = "the manifest carries a content digest over its canonical serialization; every rendered artifact stamps this digest"
+expr = "the manifest carries a content digest over its canonical serialization with the digest field itself excluded from the hashed form; every rendered artifact stamps this digest"
 traces_to = "[[anchor.manifest]]"
 
 [[constraints]]

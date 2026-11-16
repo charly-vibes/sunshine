@@ -66,10 +66,10 @@ fn p_deterministic_export() {
 
 // id: p_digest
 // generator: manifests and their canonical serializations
-// predicate: the digest equals the published hash of the canonical form; mutating one byte changes the digest
+// predicate: the digest equals the published hash of the canonical form with the digest field excluded; mutating any other byte changes the digest; mutating the digest field alone does not
 #[test]
 fn p_digest() {
-    todo_predicate!("the digest equals the published hash of the canonical form; mutating one byte changes the digest");
+    todo_predicate!("the digest equals the published hash of the canonical form with the digest field excluded; mutating any other byte changes the digest; mutating the digest field alone does not");
 }
 
 // id: p_strict_parse

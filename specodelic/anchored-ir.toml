@@ -21,7 +21,7 @@ traces_to = "[[anchored.ir]]"
 [[constraints]]
 id = "ai_verbatim_text"
 kind = "invariant"
-expr = "IR text is verbatim descriptor and episode text; the pipeline never normalizes, corrects, or re-words it; whitespace handling is published and deterministic"
+expr = "IR text is verbatim descriptor and episode text; the pipeline never corrects or re-words it; span location applies the fleet whitespace rule defined in [[anchor.manifest.am_verbatim_span]] — the corpus's one permitted normalization — identically on both sides, and collapsed matches map back to verbatim source positions deterministically for emission"
 traces_to = "[[anchored.ir]]"
 
 [[constraints]]

@@ -24,6 +24,8 @@ Next ==
   \/ vpc = "loaded" /\ vpc' = "drifted"
   \* refuse_profile: loaded -> refused (guard: [[audit.contract.ac_profile_match]])
   \/ vpc = "loaded" /\ vpc' = "refused"
+  \* refuse_foreign: loaded -> refused (guard: [[audit.contract.ac_manifest_identity]])
+  \/ vpc = "loaded" /\ vpc' = "refused"
   \* reverify: drifted -> drifted (guard: [[audit.contract.ac_deterministic]])
   \/ vpc = "drifted" /\ vpc' = "drifted"
   \* stuttering: guards are prose (uninterpreted) — a terminal

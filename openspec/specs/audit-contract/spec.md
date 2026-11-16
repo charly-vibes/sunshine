@@ -14,10 +14,12 @@ actual) in distinct machine-readable classes, never truncated, with exit
 status mirroring the verdict.
 
 The auditor is read-only and pure: it never repairs an artifact, never
-rewrites anything, never sees the network. It parses only the profile
-version stamped in the artifact — an unknown or newer profile refuses
-with remediation rather than guessing, because a guess would turn the
-verifier into the weakest link. A human-edited text artifact that drifts
+rewrites anything, never sees the network. It refuses a foreign manifest
+outright — the stamped digest must match the manifest under audit before
+any parsing begins — and it parses only the profile version stamped in
+the artifact; an unknown or newer profile refuses with remediation
+rather than guessing, because a guess would turn the verifier into the
+weakest link. A human-edited text artifact that drifts
 from its manifest is not an error to suppress; it is the correction
 signal, and it flows back to the claim store as a proposal through
 bajan's review path.
@@ -31,10 +33,12 @@ the report is the product: named drift items (claim key, field, expected,
 actual) in distinct machine-readable classes, never truncated, with exit
 status mirroring the verdict.
 The auditor is read-only and pure: it never repairs an artifact, never
-rewrites anything, never sees the network. It parses only the profile
-version stamped in the artifact — an unknown or newer profile refuses
-with remediation rather than guessing, because a guess would turn the
-verifier into the weakest link. A human-edited text artifact that drifts
+rewrites anything, never sees the network. It refuses a foreign manifest
+outright — the stamped digest must match the manifest under audit before
+any parsing begins — and it parses only the profile version stamped in
+the artifact; an unknown or newer profile refuses with remediation
+rather than guessing, because a guess would turn the verifier into the
+weakest link. A human-edited text artifact that drifts
 from its manifest is not an error to suppress; it is the correction
 signal, and it flows back to the claim store as a proposal through
 bajan's review path.
@@ -50,6 +54,7 @@ bajan's review path.
 | ac_deterministic | invariant | audit is a pure function of (artifact, manifest, profile); repeated audits yield byte-identical reports | [[audit.contract]] |
 | ac_exit_mirror | invariant | audit exits nonzero on any drift, and its envelope reports ok:false naming each drift | [[audit.contract]] |
 | ac_profile_match | invariant | the auditor parses only the profile version stamped in the artifact; an unknown or newer profile refuses with remediation rather than guessing | [[audit.contract]] |
+| ac_manifest_identity | invariant | before parsing, the auditor compares the artifact's stamped manifest digest against the against-manifest's own digest; a mismatch is a distinct machine-readable refusal class (foreign manifest), never a drift report | [[audit.contract]] |
 | ac_human_edits | advisory | a human-edited text artifact that drifts from its manifest is the correction signal; edits flow to the claim store as proposals through the store's own review path; sunshine never writes to the store | [[audit.contract]] |
 
 ## Model
@@ -68,6 +73,7 @@ bajan's review path.
 | verify_clean | loaded | verified | [[audit.contract.ac_roundtrip]] |
 | verify_drift | loaded | drifted | [[audit.contract.ac_named_drift]] |
 | refuse_profile | loaded | refused | [[audit.contract.ac_profile_match]] |
+| refuse_foreign | loaded | refused | [[audit.contract.ac_manifest_identity]] |
 | reverify | drifted | drifted | [[audit.contract.ac_deterministic]] |
 
 ## Properties
@@ -81,6 +87,7 @@ bajan's review path.
 | p_deterministic | unit | [[audit.contract.ac_deterministic]] | repeated audits over identical inputs | byte-identical reports across runs |
 | p_exit_mirror | unit | [[audit.contract.ac_exit_mirror]] | audits ending in verified, drifted, and refused states | exit status and envelope ok mirror the state; drifted reports name the full drift list |
 | p_profile_match | unit | [[audit.contract.ac_profile_match]] | artifacts stamped with unknown and newer profile versions | each refuses with remediation naming the supported profile set |
+| p_manifest_identity | unit | [[audit.contract.ac_manifest_identity]] | audits pairing artifacts with foreign, superseded, and correct manifests | mismatched digests refuse with the foreign-manifest class before any claim parsing; the correct pairing proceeds to parsing |
 | p_human_edits | unit | [[audit.contract.ac_human_edits]] | human-edited text artifacts with plausible corrections | the drift report stands as the correction signal; no store write occurs from the audit path |
 
 ## Requirements
@@ -131,6 +138,12 @@ Every property row SHALL be verified by exactly one dedicated scenario;
 - **WHEN** artifacts stamped with unknown and newer profile versions
 - **THEN** each refuses with remediation naming the supported profile set
 - **VERIFIES** [[audit.contract.p_profile_match]]
+
+#### Scenario: p_manifest_identity
+
+- **WHEN** audits pairing artifacts with foreign, superseded, and correct manifests
+- **THEN** mismatched digests refuse with the foreign-manifest class before any claim parsing; the correct pairing proceeds to parsing
+- **VERIFIES** [[audit.contract.p_manifest_identity]]
 
 #### Scenario: p_human_edits
 

@@ -42,10 +42,10 @@ fn p_charrange_anchor() {
 
 // id: p_verbatim_text
 // generator: descriptors whose episode text includes unusual whitespace and unicode forms
-// predicate: IR text equals source text byte-for-byte after the published whitespace rule; no other transformation occurs
+// predicate: span location applies the fleet whitespace rule identically on both sides; emission stays verbatim; collapsed matches map back to source positions deterministically
 #[test]
 fn p_verbatim_text() {
-    todo_predicate!("IR text equals source text byte-for-byte after the published whitespace rule; no other transformation occurs");
+    todo_predicate!("span location applies the fleet whitespace rule identically on both sides; emission stays verbatim; collapsed matches map back to source positions deterministically");
 }
 
 // id: p_deterministic_join

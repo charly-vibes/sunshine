@@ -74,6 +74,14 @@ fn p_profile_match() {
     todo_predicate!("each refuses with remediation naming the supported profile set");
 }
 
+// id: p_manifest_identity
+// generator: audits pairing artifacts with foreign, superseded, and correct manifests
+// predicate: mismatched digests refuse with the foreign-manifest class before any claim parsing; the correct pairing proceeds to parsing
+#[test]
+fn p_manifest_identity() {
+    todo_predicate!("mismatched digests refuse with the foreign-manifest class before any claim parsing; the correct pairing proceeds to parsing");
+}
+
 // id: p_human_edits
 // generator: human-edited text artifacts with plausible corrections
 // predicate: the drift report stands as the correction signal; no store write occurs from the audit path
