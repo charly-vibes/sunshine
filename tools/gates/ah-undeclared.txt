@@ -1,0 +1,79 @@
+# ah check declared backlog (ratchet input for tools/gates/ah_check_ratchet.py)
+#
+# Format: <spec>/<scenario-id>   # <owning ticket(s)>
+#
+# A scenario listed here is declared in the corpus but its contract TOML /
+# implementation has not landed yet. Each line MUST name the ticket that owns
+# it. The ratchet:
+#   - allows exactly these `no-toml` findings
+#   - fails on any other finding (including execution failures)
+#   - fails when a scenario is NOT listed but has no contract (new backlog
+#     must be declared with its ticket)
+#   - fails when a listed scenario now has a contract (stale line: prune it)
+#
+# The list only shrinks, except when a spec-first ticket adds a scenario and
+# records it in the same change.
+
+# anchor-manifest (sun-mqs; relations -> sun-t2m)
+anchor-manifest/p-claim-fields          # sun-mqs
+anchor-manifest/p-deterministic-export  # sun-mqs
+anchor-manifest/p-digest                # sun-mqs
+anchor-manifest/p-relations             # sun-t2m
+anchor-manifest/p-schema-published      # sun-mqs
+anchor-manifest/p-schema-version        # sun-mqs
+anchor-manifest/p-semantic-locator      # sun-mqs
+anchor-manifest/p-status-filter         # sun-mqs
+anchor-manifest/p-strict-parse          # sun-mqs
+anchor-manifest/p-verbatim-span         # sun-mqs
+
+# anchored-ir (sun-30y)
+anchored-ir/p-charrange-anchor          # sun-30y
+anchored-ir/p-descriptor-required       # sun-30y
+anchored-ir/p-deterministic-join        # sun-30y
+anchored-ir/p-ir-schema                 # sun-30y
+anchored-ir/p-no-semantics              # sun-30y
+anchored-ir/p-reading-order             # sun-30y
+anchored-ir/p-single-ir                 # sun-30y
+anchored-ir/p-unanchored                # sun-30y
+anchored-ir/p-verbatim-text             # sun-30y
+
+# audit-contract (sun-jh6 audit core; parsers land with their backends)
+audit-contract/p-canonical              # sun-jh6
+audit-contract/p-deterministic          # sun-jh6
+audit-contract/p-exit-mirror            # sun-jh6
+audit-contract/p-human-edits            # sun-jh6
+audit-contract/p-manifest-identity      # sun-jh6
+audit-contract/p-named-drift            # sun-jh6
+audit-contract/p-profile-match          # sun-jh6
+audit-contract/p-read-only              # sun-jh6
+audit-contract/p-roundtrip              # sun-jh6
+
+# render-backends (per-backend tickets; ship-bar properties -> sun-g0c)
+render-backends/p-audit-pairing         # sun-g0c
+render-backends/p-degrade               # sun-14e
+render-backends/p-geometry-carrier      # sun-jh6
+render-backends/p-html-selfcontained    # sun-x7d
+render-backends/p-md-spans              # sun-14e
+render-backends/p-new-backend           # sun-g0c
+render-backends/p-org-subset            # sun-tiv
+render-backends/p-pdf-annotations       # sun-4y6
+render-backends/p-profile               # sun-jh6
+
+# render-contract (sun-jh6)
+render-contract/p-atomic-write          # sun-jh6
+render-contract/p-no-claim-semantics    # sun-jh6
+render-contract/p-no-extraction         # sun-jh6
+render-contract/p-purity                # sun-jh6
+render-contract/p-source-immutable      # sun-jh6
+render-contract/p-stamp                 # sun-jh6
+render-contract/p-stateless             # sun-jh6
+
+# fleet-boundaries (static -> sun-e0f; render-dependent -> sun-evg;
+# seam/version contract decisions -> sun-mkj)
+fleet-boundaries/p-claim-owner          # sun-e0f
+fleet-boundaries/p-deletion-test        # sun-evg
+fleet-boundaries/p-geometry-owner       # sun-e0f
+fleet-boundaries/p-no-persistence       # sun-evg
+fleet-boundaries/p-readonly-view        # sun-evg
+fleet-boundaries/p-seam-published       # sun-mkj
+fleet-boundaries/p-version-contract     # sun-mkj

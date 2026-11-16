@@ -57,10 +57,13 @@ test-full:
 
 # === Spec & Lint Gates ===
 
-# Spec-corpus gates: specodelic lint + espectacular check
+# Spec-corpus gates: specodelic lint + espectacular check.
+# The ah wrapper keeps undeclared scenarios gated behind the checked-in
+# declared backlog (tools/gates/ah-undeclared.txt) so the ratchet only
+# turns one way; every other finding fails.
 gates:
     spk lint specs
-    ah check
+    python3 tools/gates/ah_check_ratchet.py --run-tests
 
 # Regenerate specodelic mirrors after editing specs (edit the spec, not
 # the mirrors)
