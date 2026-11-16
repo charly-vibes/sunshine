@@ -2,7 +2,8 @@
 #
 # Same commands run locally and in CI for consistent diagnostics.
 # Run `just` for default (build + test), `just ci` for full pipeline,
-# `just gates` for the spec-corpus gates (spk lint + ah check).
+# `just gates` for the gates (spk lint + spec mirrors + ah ratchet +
+# pretender), `just pretender` for just the complexity gate.
 
 set shell := ["bash", "-uc"]
 
@@ -57,13 +58,28 @@ test-full:
 
 # === Spec & Lint Gates ===
 
-# Spec-corpus gates: specodelic lint + espectacular check.
 # The ah wrapper keeps undeclared scenarios gated behind the checked-in
 # declared backlog (tools/gates/ah-undeclared.txt) so the ratchet only
 # turns one way; every other finding fails.
+# pretender runs here (not only in CI) so a green `just gates` implies a
+# green CI gate — a gate CI enforces but the local oracle cannot see would
+# let red land from a fully green local run.
+# Gates: specodelic lint + ah ratchet + pretender complexity.
 gates:
     spk lint specs
     python3 tools/gates/ah_check_ratchet.py --run-tests
+    just pretender
+
+# Diff base: CI derives it from the event (the PR base sha, or the sha a
+# push landed on) and widens it to the root commit when that sha is gone.
+# Locally there is no event, so the base defaults to `origin/main` — the
+# honest local equivalent ONLY for a branch forked from main, where
+# `origin/main..HEAD` is exactly this branch's surface. For anything else
+# (a range, a squashed or forked-elsewhere branch, a stack) pass the base
+# explicitly, e.g. `just pretender HEAD~3` or `just pretender <sha>`.
+# Complexity gate over the changed surface — the same command CI runs.
+pretender base="origin/main":
+    pretender check --diff-only --diff-base "{{base}}" --mode gate
 
 # Regenerate specodelic mirrors after editing specs (edit the spec, not
 # the mirrors)

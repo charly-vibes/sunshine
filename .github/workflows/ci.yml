@@ -1,0 +1,208 @@
+# CI — the fleet gate for sunshine.
+#
+# Runs the same commands as local development (`cargo build` + `cargo test`
+# from `just test-full`, then `just gates`) so CI can never be weaker than
+# the local discipline. Every gate below is blocking.
+#
+#   1. cargo build      — the binary compiles on stable Rust.
+#   2. cargo test       — the FULL suite, not the testaruda-selected subset
+#                         (selection is fast local feedback, never a gate
+#                         substitute). The fleet boundary rules live in
+#                         tests/fleet_boundary_static.rs and arrive through
+#                         this suite — they are NOT duplicated here as shell
+#                         greps.
+#   3. spk lint specs   — specodelic lint over the authored spec corpus.
+#   4. generated spec mirrors —
+#      `spk compile specs` + `python3 tools/deploy_specs.py`, then a
+#      `git status --porcelain -- specs specodelic openspec` that must be
+#      empty. Lint reads the authored corpus only: it cannot see a mirror
+#      that was hand-edited, committed stale, or drifted from its source
+#      spec. Regenerating and diffing is the only check that catches a
+#      generated artifact no longer matching the spec it mirrors — and the
+#      mirrors are committed, so drift is drift even when lint is green.
+#   5. ah declared-backlog ratchet —
+#      `python3 tools/gates/ah_check_ratchet.py --run-tests`.
+#      NEVER a raw `ah check`: the corpus is authored spec-first, so a
+#      scenario is declared (spec row) before its contract TOML and
+#      implementation land. Raw `ah check` treats every such not-yet-declared
+#      scenario as a gate-failing `no-toml` structural finding, so it can
+#      never be green while the roadmap is open — a raw gate here would
+#      either block all spec-first work or be bypassed. The ratchet keeps the
+#      gate hard without hiding drift: `no-toml` findings pass ONLY for the
+#      scenario ids checked into tools/gates/ah-undeclared.txt, every other
+#      finding fails, and a new or stale backlog line fails (the ratchet only
+#      turns one way).
+#   6. pretender check  — complexity gate (`--mode gate`, the repo's
+#                         committed pretender.toml mode) over the surface
+#                         changed by the push/PR.
+#
+# Ecosystem tools are installed at the exact versions pinned in
+# versions.ddl.toml (Standardization §4: installs are pinned, never `latest`
+# — a broken release of any in-org tool must not break the whole fleet's
+# CI). The §4 install channel per tool is part of the contract: crates.io
+# tools via `cargo install <crate>@<pin> --locked`, openspec via npm, bd via
+# its pinned GitHub release. Bump versions.ddl.toml and this file in the same
+# commit.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  ci:
+    name: Test & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      # Full history: the spec-corpus gates resolve the repo root through
+      # `git rev-parse`, and pretender's changed-surface gate diffs against an
+      # explicit base commit. A shallow checkout would silently break both.
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      # §4 dogfood matrix (declared in versions.ddl.toml): pretender, wai,
+      # bd, openspec, dont must be wired into CI at their committed pins, and
+      # the gate tools (specodelic/spk, espectacular/ah, testaruda) are what
+      # the gates below actually invoke. Versions are literal — never a range
+      # and never `latest`. testaruda ships its rust/python adapters from the
+      # same crate, so `--locked` needs no extra adapter installs.
+      #
+      # dulce-de-leche (ddl) is deliberately NOT installed: it is the
+      # dev-time orchestrator for this matrix (`ddl doctor` reads the
+      # machine-local, gitignored .ddl/ state), no gate here shells out to
+      # it, and installing it would be dead weight in the gate job.
+      - name: Install gate tools (versions.ddl.toml pins, §4)
+        run: |
+          cargo install --locked \
+            espectacular@0.12.2 \
+            specodelic@0.12.1 \
+            testaruda@0.5.9 \
+            pretender@0.7.0 \
+            wai-cli@2026.10.10 \
+            dont-cli@0.2.2
+
+      - name: Install openspec (npm pin, §4)
+        run: npm install -g @fission-ai/openspec@0.19.0
+
+      - name: Install bd (beads, pinned GitHub release, §4)
+        run: |
+          tmp=$(mktemp -d)
+          curl -fsSL "https://github.com/gastownhall/beads/releases/download/v1.3.0/beads_1.3.0_linux_amd64.tar.gz" \
+            -o "$tmp/bd.tgz"
+          # A pinned URL is not a pinned artifact: a release asset can be
+          # re-cut or tampered with under the same tag, and this tarball is
+          # extracted and installed as root. Verify it against the checksum
+          # published in that release's checksums.txt before we unpack it.
+          echo "2f92b904ecf35b607e44dc5c39229173af69c54f1183e8d709f1773540cdcf3b  $tmp/bd.tgz" \
+            | sha256sum -c -
+          # extract only the binary — the tarball also ships README/LICENSE/
+          # CHANGELOG, which must not clobber the repo checkout
+          tar -xzf "$tmp/bd.tgz" -C "$tmp" bd
+          sudo mv "$tmp/bd" /usr/local/bin/bd
+
+      # §4 dogfood: an installed tool must actually run, not just install
+      # (a pin that silently fails to produce a working binary is drift too).
+      - name: Smoke pinned tools
+        env:
+          DO_NOT_TRACK: "1"
+        run: |
+          spk --version
+          ah --version
+          testaruda --version
+          pretender --version
+          wai --version
+          dont --version
+          openspec --version
+          bd --version
+
+      - name: cargo build
+        run: cargo build --locked
+
+      - name: cargo test (full suite — the fleet gate)
+        run: cargo test --locked
+
+      - name: spk lint specs (spec-corpus gate)
+        run: spk lint specs
+
+      # Lint cannot see the mirrors: regenerate them from the authored corpus
+      # and fail if regeneration changes anything under the committed tree.
+      # `specs` holds the sources, `specodelic`/`openspec` hold the generated
+      # artifacts — any porcelain output under those paths means a stale
+      # artifact is committed or drift was introduced.
+      - name: spec mirrors are current (spk compile + deploy_specs)
+        run: |
+          spk compile specs
+          python3 tools/deploy_specs.py
+          drift=$(git status --porcelain -- specs specodelic openspec)
+          if [ -n "$drift" ]; then
+            echo "::error::generated spec artifacts are stale or drifted"
+            echo "$drift"
+            git --no-pager diff -- specs specodelic openspec
+            exit 1
+          fi
+
+      # The ratchet, not raw `ah check` — see the header comment for why.
+      - name: ah declared-backlog ratchet (--run-tests)
+        run: python3 tools/gates/ah_check_ratchet.py --run-tests
+
+      - name: pretender gate (changed surface)
+        # `--diff-only` scopes the gate to the files this push/PR touched and
+        # `--mode gate` is the committed pretender.toml mode (no advisory
+        # lease). The diff base is explicit because the configured default
+        # (`origin/main`) is wrong for a push to main — HEAD *is* main there,
+        # so the diff would be empty and the gate vacuous. PRs diff against
+        # the PR base sha; pushes against the sha they were pushed onto.
+        # When that sha is empty or no longer in history (force-push, first
+        # push to a new repo) the base is WIDENED to the root commit, never
+        # narrowed to HEAD^ — see the inline comment.
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          base="$BASE_SHA"
+          if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            # NEVER fall back to HEAD^: on a force-push whose `before` is gone
+            # (or a first push, where `before` is all zeros) HEAD^ would gate
+            # the tip commit alone and every earlier commit in the push would
+            # land ungatechecked. Widen instead: the root commit makes the
+            # whole history the changed surface. The one case where the root
+            # does not apply is a history with several roots (merged-in
+            # histories) — then no single root is a valid base and the
+            # merge-base with origin/main is the widest remaining base.
+            roots=$(git rev-list --max-parents=0 HEAD 2>/dev/null || true)
+            case "$roots" in
+              ""|*$'\n'*) base="" ;;   # no root, or more than one
+              *) base="$roots" ;;
+            esac
+            if [ -z "$base" ]; then
+              base=$(git merge-base HEAD origin/main 2>/dev/null || true)
+            fi
+          fi
+          # An unresolved base must not reach the gate: pretender would diff
+          # against nothing and pass vacuously. Fail loudly instead.
+          if [ -z "$base" ]; then
+            echo "::error::no resolvable pretender diff base (BASE_SHA='${BASE_SHA}', no single root commit, no merge-base with origin/main)"
+            exit 1
+          fi
+          echo "pretender diff base: $base ($(git rev-parse --short "$base"))"
+          pretender check --diff-only --diff-base "$base" --mode gate

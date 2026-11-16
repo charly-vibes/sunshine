@@ -55,16 +55,13 @@ def key_of(finding: dict) -> str:
     return f"{finding['spec']}/{finding['scenario']['id']}"
 
 
-def main() -> int:
-    root = repo_root()
-    baseline_path = root / BASELINE_REL
-    baseline = load_baseline(baseline_path)
-
+def load_report(root: Path, argv: list[str]) -> dict | None:
+    """Run `ah check --json` and parse its report, or emit diagnostics."""
     proc = subprocess.run(
-        ["ah", "check", "--json", *sys.argv[1:]], cwd=root, capture_output=True, text=True
+        ["ah", "check", "--json", *argv], cwd=root, capture_output=True, text=True
     )
     try:
-        report = json.loads(proc.stdout)
+        return json.loads(proc.stdout)
     except json.JSONDecodeError:
         sys.stdout.write(proc.stdout)
         sys.stderr.write(proc.stderr)
@@ -73,20 +70,11 @@ def main() -> int:
             f"(exit {proc.returncode})",
             file=sys.stderr,
         )
-        return 1
+        return None
 
-    data = report.get("data") or {}
-    summary = data.get("summary") or {}
-    findings = data.get("findings") or []
 
-    if report.get("ok"):
-        print(
-            "ah-check-ratchet: OK — "
-            f"{summary.get('passed', 0)} passed, 0 findings, "
-            f"{len(baseline)} declared-undeclared scenario(s)"
-        )
-        return 0
-
+def classify(findings: list[dict]) -> tuple[dict[str, dict], list[dict]]:
+    """Split findings into baseline-keyed `no-toml` entries and everything else."""
     undeclared: dict[str, dict] = {}
     other: list[dict] = []
     for finding in findings:
@@ -94,48 +82,88 @@ def main() -> int:
             undeclared[key_of(finding)] = finding
         else:
             other.append(finding)
+    return undeclared, other
 
+
+def report_ok_clean(summary: dict, baseline: dict[str, str]) -> int:
+    print(
+        "ah-check-ratchet: OK — "
+        f"{summary.get('passed', 0)} passed, 0 findings, "
+        f"{len(baseline)} declared-undeclared scenario(s)"
+    )
+    return 0
+
+
+def report_ok_backlog(summary: dict, undeclared: dict[str, dict]) -> int:
+    print(
+        "ah-check-ratchet: OK — "
+        f"{summary.get('passed', 0)} passed, {len(undeclared)} declared-undeclared scenario(s), "
+        "no other findings"
+    )
+    return 0
+
+
+def print_other_findings(other: list[dict]) -> None:
+    print(f"\n{len(other)} finding(s) outside the declared backlog:")
+    for finding in other:
+        category = finding.get("category", "?")
+        print(f"  [{category}] {finding.get('kind')}: {key_of(finding)}")
+        playbook = finding.get("playbook_command")
+        if playbook:
+            print(f"      fix path: {playbook}")
+
+
+def print_new_keys(new: list[str]) -> None:
+    print(
+        f"\n{len(new)} undeclared scenario(s) not in the baseline. "
+        "A new spec-first scenario must be declared with its owning ticket:"
+    )
+    for key in new:
+        print(f"  + {key}")
+
+
+def print_stale_keys(stale: list[str], baseline: dict[str, str]) -> None:
+    print(
+        f"\n{len(stale)} stale baseline line(s): the scenario is declared or gone. "
+        "Remove these lines (the ratchet only turns one way):"
+    )
+    for key in stale:
+        owner = baseline[key]
+        suffix = f"  # {owner}" if owner else ""
+        print(f"  - {key}{suffix}")
+
+
+def report_failure(
+    baseline: dict[str, str], undeclared: dict[str, dict], other: list[dict]
+) -> int:
     new = sorted(set(undeclared) - set(baseline))
     stale = sorted(set(baseline) - set(undeclared))
-
-    if not other and not new and not stale:
-        print(
-            "ah-check-ratchet: OK — "
-            f"{summary.get('passed', 0)} passed, {len(undeclared)} declared-undeclared scenario(s), "
-            "no other findings"
-        )
-        return 0
-
     print(f"ah-check-ratchet: FAILED ({BASELINE_REL})")
-
     if other:
-        print(f"\n{len(other)} finding(s) outside the declared backlog:")
-        for finding in other:
-            category = finding.get("category", "?")
-            print(f"  [{category}] {finding.get('kind')}: {key_of(finding)}")
-            playbook = finding.get("playbook_command")
-            if playbook:
-                print(f"      fix path: {playbook}")
-
+        print_other_findings(other)
     if new:
-        print(
-            f"\n{len(new)} undeclared scenario(s) not in the baseline. "
-            "A new spec-first scenario must be declared with its owning ticket:"
-        )
-        for key in new:
-            print(f"  + {key}")
-
+        print_new_keys(new)
     if stale:
-        print(
-            f"\n{len(stale)} stale baseline line(s): the scenario is declared or gone. "
-            "Remove these lines (the ratchet only turns one way):"
-        )
-        for key in stale:
-            owner = baseline[key]
-            suffix = f"  # {owner}" if owner else ""
-            print(f"  - {key}{suffix}")
-
+        print_stale_keys(stale, baseline)
     return 1
+
+
+def main() -> int:
+    root = repo_root()
+    baseline = load_baseline(root / BASELINE_REL)
+    report = load_report(root, sys.argv[1:])
+    if report is None:
+        return 1
+
+    data = report.get("data") or {}
+    summary = data.get("summary") or {}
+    if report.get("ok"):
+        return report_ok_clean(summary, baseline)
+
+    undeclared, other = classify(data.get("findings") or [])
+    if other or set(undeclared) != set(baseline):
+        return report_failure(baseline, undeclared, other)
+    return report_ok_backlog(summary, undeclared)
 
 
 if __name__ == "__main__":
