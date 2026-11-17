@@ -1,32 +1,43 @@
 schema: spec-driven
 
-# Project context (optional)
-# Add only constraints that should guide OpenSpec artifacts and workflows.
-# Include constraints an agent cannot infer by reading the code.
-# Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+context: |
+  sunshine is the fleet's document compiler: it turns claim anchor manifests
+  into tagged, auditable documents (pdf/md/org/html) over one anchored-document
+  IR, with a round-trip audit contract.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Boundary: sunset owns source geometry (DSC descriptors), bajan owns the claim
+  graph. A third concern — rendering claims back into readable documents —
+  belongs to neither, so it lives here. Deletion test: if a capability would
+  still make sense after deleting weave, it belongs to sunset or bajan — refuse
+  it here (specs/fleet-boundaries.md, fb_deletion_test).
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+  Naming: the binary, crate, and repo are all `sunshine`, paired with `sunset`
+  (inputs: the day's sources; outputs: readable, claim-tagged documents). No
+  tool-namespace elsewhere in the fleet.
+
+  Conventions (non-negotiable):
+  - spec-first: every behavior lands in specs/ (specodelic format, `spk lint
+    specs` gates commits) before implementation
+  - suite envelope: every command answers {ok, envelope_version, cli_version,
+    envelope_kind, data}; exit mirrors ok; errors carry remediation
+  - purity: render and audit are pure functions of their inputs; identical
+    inputs produce byte-identical outputs
+  - audit: audit(render(m)) == m under published canonicalization; a backend
+    whose audit round-trip fails does not ship
+
+  Toolchain: `just test` (testaruda), `just gates` (spk lint + ah check),
+  lefthook pre-commit/pre-push hard gates, bd for issues
+  (`.beads/issues.jsonl` is the source of truth), wai for decisions, openspec
+  changes under openspec/changes/.
+
+rules:
+  proposal:
+    - State which fleet repo owns the concern (fleet-boundaries fb_deletion_test)
+      and what is out of scope
+  tasks:
+    - Map each implementation task to a spec in specs/ and a red→green→refactor cycle
+
+operations:
+  archive:
+    guidance:
+      - Summarize the archive outcome before finishing

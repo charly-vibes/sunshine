@@ -102,7 +102,7 @@ jobs:
             wai-cli@2026.11.11
 
       - name: Install openspec (npm pin, §4)
-        run: npm install -g @fission-ai/openspec@0.19.0
+        run: npm install -g @fission-ai/openspec@2.1.0
 
       - name: Install dont (pinned GitHub release, §4)
         run: |
